@@ -1,0 +1,26 @@
+appId: com.bssm.dice
+productName: Yacht Dice
+copyright: Copyright © 2026 BSSM
+
+files:
+  - dist-electron/**/*
+  - dist/**/*
+  - package.json
+
+directories:
+  output: release
+
+mac:
+  category: public.app-category.games
+  target:
+    - dmg
+
+win:
+  target:
+    - nsis
+
+linux:
+  target:
+    - AppImage
+    - deb
+  category: Game
