@@ -41,8 +41,7 @@
   position: absolute;
   bottom: 20px;
   left: 50%;
-  transform: translateX(-50%);
-  z-index: 10;
+  z-index: 100;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -56,14 +55,16 @@
   border-radius: var(--radius-pill);
   cursor: pointer;
   box-shadow: 0 4px 12px rgba(0, 113, 227, 0.35);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition: box-shadow 0.15s ease, opacity 0.15s ease;
+  /* Use margin-left instead of transform to avoid hover issues */
+  margin-left: -35px;
 }
 
 .rollBtn:hover {
-  transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(0, 113, 227, 0.45);
+  opacity: 0.95;
 }
 
 .rollBtn:active {
-  transform: translateY(0);
+  opacity: 0.9;
 }

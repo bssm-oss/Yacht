@@ -10,7 +10,7 @@ export const G = -32;
 export const RESTITUTION = 0.42;
 export const FRICTION = 0.78;
 export const ANG_FRICTION = 0.78;
-export const COLL_R = HALF * 1.0;
+export const COLL_R = HALF * 1.05;
 export const DIE_RESTITUTION = 0.4;
 
 export interface DiceBody {
@@ -139,7 +139,7 @@ export function stepPhysics(dice: DiceBody[], dt: number): boolean {
 
 export function resolveCollisions(dice: DiceBody[]) {
   // Multiple iterations for stability
-  const iterations = 3;
+  const iterations = 5;
 
   for (let iter = 0; iter < iterations; iter++) {
     for (let i = 0; i < dice.length; i++) {
@@ -163,8 +163,8 @@ export function resolveCollisions(dice: DiceBody[]) {
           const nz = dz / dist;
           const overlap = minD - dist;
 
-          // Push apart with stronger separation
-          const push = overlap * 0.6; // Increased from 0.5
+          // Stronger push apart
+          const push = overlap * 0.8;
           a.pos.x -= nx * push;
           a.pos.y -= ny * push;
           a.pos.z -= nz * push;
@@ -173,8 +173,8 @@ export function resolveCollisions(dice: DiceBody[]) {
           b.pos.z += nz * push;
 
           // Keep dice above floor
-          if (a.pos.y < FLOOR_Y) a.pos.y = FLOOR_Y + 0.01;
-          if (b.pos.y < FLOOR_Y) b.pos.y = FLOOR_Y + 0.01;
+          if (a.pos.y < FLOOR_Y) a.pos.y = FLOOR_Y + 0.02;
+          if (b.pos.y < FLOOR_Y) b.pos.y = FLOOR_Y + 0.02;
 
           // Relative velocity
           const rvx = b.vel.x - a.vel.x;
@@ -196,7 +196,7 @@ export function resolveCollisions(dice: DiceBody[]) {
             a.settleT = 0;
             b.settleT = 0;
 
-            const spinMag = Math.min(10, Math.abs(velAlongN) * 5);
+            const spinMag = Math.min(12, Math.abs(velAlongN) * 6);
             a.ang.x += (Math.random() - 0.5) * spinMag;
             a.ang.y += (Math.random() - 0.5) * spinMag;
             a.ang.z += (Math.random() - 0.5) * spinMag;
