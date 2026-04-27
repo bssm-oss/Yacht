@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s -L --max-filesize 1048576 \"https://api.anthropic.com/v1/design/h/3jjF5xKlwMypQyO4NkW9Mg\")",
+      "Bash(curl -v \"https://api.anthropic.com/v1/design/h/3jjF5xKlwMypQyO4NkW9Mg\")",
+      "Bash(curl -s -L \"https://api.anthropic.com/v1/design/h/3jjF5xKlwMypQyO4NkW9Mg\" -o design.tar.gz)",
+      "Bash(mkdir -p design_extracted)",
+      "Bash(tar -xzf design.tar.gz -C design_extracted)"
+    ]
+  }
+}

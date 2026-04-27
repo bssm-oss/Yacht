@@ -1,0 +1,291 @@
+/* ============================================================
+   Apple Design System — colors_and_type.css
+   Foundation tokens for type, color, spacing, radius, shadow.
+   ============================================================ */
+
+:root {
+  /* ---------- Typography: Font Families ---------- */
+  /* SF Pro is Apple's proprietary typeface. Substituted with Inter
+     (closest free Google Font match) where SF Pro is unavailable. */
+  --font-display: "SF Pro Display", "SF Pro Icons", "Helvetica Neue",
+                  "Helvetica", "Arial", "Inter", sans-serif;
+  --font-text:    "SF Pro Text", "SF Pro Icons", "Helvetica Neue",
+                  "Helvetica", "Arial", "Inter", sans-serif;
+
+  /* ---------- Typography: Type Scale ----------
+     Rule: use --font-display at ≥20px; --font-text below 20px. */
+
+  /* Display Hero — product launch headlines */
+  --type-hero-family:        var(--font-display);
+  --type-hero-size:          56px;
+  --type-hero-weight:        600;
+  --type-hero-line-height:   1.07;
+  --type-hero-tracking:      -0.28px;
+
+  /* Section Heading */
+  --type-section-family:     var(--font-display);
+  --type-section-size:       40px;
+  --type-section-weight:     600;
+  --type-section-line-height:1.10;
+  --type-section-tracking:   normal;
+
+  /* Tile Heading */
+  --type-tile-family:        var(--font-display);
+  --type-tile-size:          28px;
+  --type-tile-weight:        400;
+  --type-tile-line-height:   1.14;
+  --type-tile-tracking:      0.196px;
+
+  /* Card Title (bold) */
+  --type-card-title-family:  var(--font-display);
+  --type-card-title-size:    21px;
+  --type-card-title-weight:  700;
+  --type-card-title-line-height: 1.19;
+  --type-card-title-tracking:0.231px;
+
+  /* Sub-heading */
+  --type-subheading-family:  var(--font-display);
+  --type-subheading-size:    21px;
+  --type-subheading-weight:  400;
+  --type-subheading-line-height: 1.19;
+  --type-subheading-tracking:0.231px;
+
+  /* Nav Heading */
+  --type-navheading-family:  var(--font-text);
+  --type-navheading-size:    34px;
+  --type-navheading-weight:  600;
+  --type-navheading-line-height: 1.47;
+  --type-navheading-tracking:-0.374px;
+
+  /* Sub-nav */
+  --type-subnav-family:      var(--font-text);
+  --type-subnav-size:        24px;
+  --type-subnav-weight:      300;
+  --type-subnav-line-height: 1.50;
+  --type-subnav-tracking:    normal;
+
+  /* Body */
+  --type-body-family:        var(--font-text);
+  --type-body-size:          17px;
+  --type-body-weight:        400;
+  --type-body-line-height:   1.47;
+  --type-body-tracking:      -0.374px;
+
+  /* Body Emphasis */
+  --type-body-emph-weight:   600;
+  --type-body-emph-line-height: 1.24;
+
+  /* Buttons */
+  --type-button-large-size:   18px;
+  --type-button-large-weight: 300;
+  --type-button-large-line-height: 1.00;
+
+  --type-button-size:         17px;
+  --type-button-weight:       400;
+  --type-button-line-height:  2.41;
+
+  /* Link */
+  --type-link-family:        var(--font-text);
+  --type-link-size:          14px;
+  --type-link-weight:        400;
+  --type-link-line-height:   1.43;
+  --type-link-tracking:      -0.224px;
+
+  /* Caption */
+  --type-caption-family:     var(--font-text);
+  --type-caption-size:       14px;
+  --type-caption-weight:     400;
+  --type-caption-line-height:1.29;
+  --type-caption-tracking:   -0.224px;
+  --type-caption-bold-weight:600;
+
+  /* Micro */
+  --type-micro-size:         12px;
+  --type-micro-weight:       400;
+  --type-micro-line-height:  1.33;
+  --type-micro-tracking:     -0.12px;
+  --type-micro-bold-weight:  600;
+
+  /* Nano */
+  --type-nano-size:          10px;
+  --type-nano-weight:        400;
+  --type-nano-line-height:   1.47;
+  --type-nano-tracking:      -0.08px;
+
+
+  /* ---------- Color: Primary Canvas ---------- */
+  --color-black:             #000000;   /* hero dark backgrounds */
+  --color-light-gray:        #f5f5f7;   /* alternate light bg */
+  --color-near-black:        #1d1d1f;   /* primary text on light */
+  --color-white:             #ffffff;
+
+  /* ---------- Color: Interactive (Apple Blue family) ---------- */
+  --color-apple-blue:        #0071e3;   /* primary CTA + focus */
+  --color-link-blue:         #0066cc;   /* text links on light bg */
+  --color-bright-blue:       #2997ff;   /* links on dark bg */
+
+  /* ---------- Color: Text (Alpha) ---------- */
+  --color-text-primary-light: var(--color-near-black);
+  --color-text-primary-dark:  var(--color-white);
+  --color-text-secondary-light: rgba(0, 0, 0, 0.80);
+  --color-text-tertiary-light:  rgba(0, 0, 0, 0.48);
+  --color-text-secondary-dark:  rgba(255, 255, 255, 0.80);
+  --color-text-tertiary-dark:   rgba(255, 255, 255, 0.56);
+
+  /* ---------- Color: Dark Surfaces (cards on black) ---------- */
+  --color-dark-surface-1:    #272729;
+  --color-dark-surface-2:    #262628;
+  --color-dark-surface-3:    #28282a;
+  --color-dark-surface-4:    #2a2a2d;
+  --color-dark-surface-5:    #242426;
+
+  /* ---------- Color: Button States ---------- */
+  --color-button-active:        #ededf2;
+  --color-button-default-light: #fafafc;
+  --color-button-border-subtle: rgba(0, 0, 0, 0.04);
+  --color-overlay-scrim:        rgba(210, 210, 215, 0.64);
+  --color-hover-dark-close:     rgba(255, 255, 255, 0.32);
+
+  /* ---------- Semantic color roles ---------- */
+  --bg-page:                 var(--color-white);
+  --bg-section-light:        var(--color-light-gray);
+  --bg-section-dark:         var(--color-black);
+
+  --fg-primary:              var(--color-near-black);
+  --fg-secondary:            var(--color-text-secondary-light);
+  --fg-tertiary:             var(--color-text-tertiary-light);
+  --fg-on-dark:              var(--color-white);
+
+  --link:                    var(--color-link-blue);
+  --link-on-dark:            var(--color-bright-blue);
+  --focus-ring:              var(--color-apple-blue);
+
+
+  /* ---------- Spacing (8pt base, dense at small sizes) ---------- */
+  --space-2:  2px;
+  --space-4:  4px;
+  --space-5:  5px;
+  --space-6:  6px;
+  --space-7:  7px;
+  --space-8:  8px;
+  --space-9:  9px;
+  --space-10: 10px;
+  --space-11: 11px;
+  --space-14: 14px;
+  --space-15: 15px;
+  --space-17: 17px;
+  --space-20: 20px;
+  --space-24: 24px;
+
+  /* Layout */
+  --container-max: 980px;
+
+
+  /* ---------- Border Radius ---------- */
+  --radius-micro:       5px;   /* small containers, tags */
+  --radius-standard:    8px;   /* buttons, cards, images */
+  --radius-comfortable: 11px;  /* inputs, filter buttons */
+  --radius-large:       12px;  /* feature panels */
+  --radius-pill:        980px; /* CTA pills, nav pills */
+  --radius-circle:      50%;   /* media controls */
+
+
+  /* ---------- Shadow / Elevation ---------- */
+  /* Apple uses shadow extremely sparingly. */
+  --shadow-none:        none;
+  --shadow-card:        rgba(0, 0, 0, 0.22) 3px 5px 30px 0px;
+  --shadow-focus-ring:  0 0 0 2px var(--color-apple-blue);
+
+  /* Navigation glass */
+  --nav-bg:             rgba(0, 0, 0, 0.80);
+  --nav-backdrop:       saturate(180%) blur(20px);
+  --nav-height:         48px;
+}
+
+/* ============================================================
+   Semantic element styling (opt-in via class scope)
+   ============================================================ */
+
+.apple-type {
+  font-family: var(--font-text);
+  color: var(--fg-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+.apple-type h1,
+.apple-type .h1 {
+  font-family: var(--font-display);
+  font-size: var(--type-hero-size);
+  font-weight: var(--type-hero-weight);
+  line-height: var(--type-hero-line-height);
+  letter-spacing: var(--type-hero-tracking);
+  margin: 0;
+}
+
+.apple-type h2,
+.apple-type .h2 {
+  font-family: var(--font-display);
+  font-size: var(--type-section-size);
+  font-weight: var(--type-section-weight);
+  line-height: var(--type-section-line-height);
+  margin: 0;
+}
+
+.apple-type h3,
+.apple-type .h3 {
+  font-family: var(--font-display);
+  font-size: var(--type-tile-size);
+  font-weight: var(--type-tile-weight);
+  line-height: var(--type-tile-line-height);
+  letter-spacing: var(--type-tile-tracking);
+  margin: 0;
+}
+
+.apple-type h4,
+.apple-type .h4 {
+  font-family: var(--font-display);
+  font-size: var(--type-card-title-size);
+  font-weight: var(--type-card-title-weight);
+  line-height: var(--type-card-title-line-height);
+  letter-spacing: var(--type-card-title-tracking);
+  margin: 0;
+}
+
+.apple-type p,
+.apple-type .body {
+  font-family: var(--font-text);
+  font-size: var(--type-body-size);
+  font-weight: var(--type-body-weight);
+  line-height: var(--type-body-line-height);
+  letter-spacing: var(--type-body-tracking);
+  margin: 0;
+}
+
+.apple-type .caption {
+  font-family: var(--font-text);
+  font-size: var(--type-caption-size);
+  line-height: var(--type-caption-line-height);
+  letter-spacing: var(--type-caption-tracking);
+}
+
+.apple-type .micro {
+  font-size: var(--type-micro-size);
+  line-height: var(--type-micro-line-height);
+  letter-spacing: var(--type-micro-tracking);
+}
+
+.apple-type a,
+.apple-type .link {
+  color: var(--link);
+  text-decoration: none;
+}
+.apple-type a:hover,
+.apple-type .link:hover { text-decoration: underline; }
+
+/* On dark backgrounds */
+.apple-type.on-dark,
+.on-dark .apple-type { color: var(--fg-on-dark); }
+.on-dark a,
+.on-dark .link { color: var(--link-on-dark); }

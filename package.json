@@ -1,0 +1,23 @@
+{
+  "name": "dice",
+  "version": "1.0.0",
+  "private": true,
+  "description": "BSSM Dice - Yacht dice game with Three.js and Electron",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\""
+  },
+  "devDependencies": {
+    "turbo": "^2.4.4",
+    "prettier": "^3.5.3",
+    "typescript": "^5.8.2"
+  },
+  "packageManager": "pnpm@10.6.5",
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}
