@@ -14,11 +14,10 @@ interface Dice3DProps {
   held: boolean[];
   onRollComplete?: () => void;
   onToggleHold?: (index: number) => void;
-  onRollClick?: () => void;
   rollSeed?: number;
 }
 
-export function Dice3D({ values, held, onRollComplete, onToggleHold, onRollClick, rollSeed = 0 }: Dice3DProps) {
+export function Dice3D({ values, held, onRollComplete, onToggleHold, rollSeed = 0 }: Dice3DProps) {
   const mountRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<{
     scene: THREE.Scene;
@@ -34,7 +33,7 @@ export function Dice3D({ values, held, onRollComplete, onToggleHold, onRollClick
 
   const valuesRef = useRef(values);
   const heldRef = useRef(held);
-  const callbacksRef = useRef({ onRollComplete, onToggleHold, onRollClick });
+  const callbacksRef = useRef({ onRollComplete, onToggleHold });
 
   useEffect(() => {
     valuesRef.current = values;
@@ -45,8 +44,8 @@ export function Dice3D({ values, held, onRollComplete, onToggleHold, onRollClick
   }, [held]);
 
   useEffect(() => {
-    callbacksRef.current = { onRollComplete, onToggleHold, onRollClick };
-  }, [onRollComplete, onToggleHold, onRollClick]);
+    callbacksRef.current = { onRollComplete, onToggleHold };
+  }, [onRollComplete, onToggleHold]);
 
   // Setup scene
   useEffect(() => {
@@ -137,12 +136,6 @@ export function Dice3D({ values, held, onRollComplete, onToggleHold, onRollClick
           callbacksRef.current.onToggleHold(idx);
         }
         return;
-      }
-
-      // Check cup click for roll
-      const cupHit = raycaster.intersectObjects(cupGroup.children, true);
-      if (cupHit.length && callbacksRef.current.onRollClick) {
-        callbacksRef.current.onRollClick();
       }
     };
     renderer.domElement.addEventListener('pointerdown', onPointerDown);
@@ -300,26 +293,13 @@ export function Dice3D({ values, held, onRollComplete, onToggleHold, onRollClick
   }, [values.join(',')]);
 
   return (
-    <div className={styles.mount} ref={mountRef}>
-      <RollButton onClick={onRollClick} />
-    </div>
+    <div className={styles.mount} ref={mountRef} />
   );
 }
 
 interface Dice3DAPI {
   startRoll: (targetValues: DiceValue[], heldArr: boolean[]) => void;
   syncRestingValues: (vals: DiceValue[]) => void;
-}
-
-function RollButton({ onClick }: { onClick?: () => void }) {
-  return (
-    <button className={styles.rollBtn} onClick={onClick}>
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-      </svg>
-      Roll
-    </button>
-  );
 }
 
 export default Dice3D;

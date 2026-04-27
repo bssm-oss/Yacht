@@ -24,24 +24,35 @@
   overflow: hidden;
 }
 
-.hint {
+.rollBtn {
   position: absolute;
-  bottom: 24px;
+  bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-family: var(--font-text);
-  font-size: 13px;
-  color: var(--text-secondary);
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(8px);
-  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  background: var(--color-apple-blue);
+  border: none;
+  padding: 10px 18px;
   border-radius: var(--radius-pill);
-  pointer-events: none;
-  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 113, 227, 0.35);
+  transition: box-shadow 0.15s ease, opacity 0.15s ease;
 }
 
-[data-theme='dark'] .hint {
-  background: rgba(22, 22, 24, 0.8);
+.rollBtn:hover {
+  box-shadow: 0 6px 16px rgba(0, 113, 227, 0.45);
+  opacity: 0.95;
+}
+
+.rollBtn:active {
+  opacity: 0.9;
 }
 
 .tweaks {
