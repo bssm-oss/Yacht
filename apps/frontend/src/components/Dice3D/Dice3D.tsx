@@ -172,16 +172,18 @@ export function Dice3D({ values, held, onRollComplete, onToggleHold, onRollClick
       // Update held dice positions and lights
       const heldArr = heldRef.current;
       dice.forEach((d, i) => {
-        if (heldArr?.[i] && !d.inCup && d.resting) {
-          // Move held dice to top area
-          const targetX = TRAY.minX + (TRAY.maxX - TRAY.minX) * (0.15 + i * 0.18);
-          const targetZ = TRAY.minZ + 0.5;
-          const targetY = HALF + 0.1;
+        if (heldArr?.[i] && !d.inCup && d.resting && !rolling) {
+          // Move held dice to top row in tray
+          const targetX = TRAY.minX + 0.5 + i * 0.55;
+          const targetZ = TRAY.minZ + 0.4;
+          const targetY = HALF;
 
           // Smooth lerp to held position
-          d.pos.x += (targetX - d.pos.x) * 0.1;
-          d.pos.z += (targetZ - d.pos.z) * 0.1;
-          d.pos.y += (targetY - d.pos.y) * 0.1;
+          d.pos.x += (targetX - d.pos.x) * 0.12;
+          d.pos.z += (targetZ - d.pos.z) * 0.12;
+          d.pos.y += (targetY - d.pos.y) * 0.12;
+          d.vel.set(0, 0, 0);
+          d.ang.set(0, 0, 0);
           d.mesh.position.copy(d.pos);
 
           // Update glow light

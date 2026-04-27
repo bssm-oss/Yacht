@@ -80,6 +80,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const state = get().gameState;
     if (state.phase !== 'playing') return;
     if (state.rollsUsed === 0) return;
+    if (index < 0 || index >= 5) return;
 
     const held = [...state.held];
     held[index] = !held[index];

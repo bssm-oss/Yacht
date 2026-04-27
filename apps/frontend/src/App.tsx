@@ -58,10 +58,6 @@ function App() {
               rollSeed={rollSeed}
             />
 
-            {showHints && gameState.rollsUsed === 0 && gameState.phase === 'playing' && (
-              <div className={styles.hint}>Tap the cup to shake & roll</div>
-            )}
-
             {gameState.phase === 'ended' && (
               <GameOver
                 players={gameState.players}
