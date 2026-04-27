@@ -1,0 +1,38 @@
+.mount {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.heldOverlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.heldPill {
+  position: absolute;
+  transform: translate(-50%, 0);
+  background: var(--color-apple-blue);
+  color: white;
+  font-family: var(--font-text);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0, 113, 227, 0.3);
+}
+
+.heldDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: white;
+  display: inline-block;
+}
