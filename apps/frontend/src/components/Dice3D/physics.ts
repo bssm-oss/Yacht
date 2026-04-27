@@ -138,64 +138,76 @@ export function stepPhysics(dice: DiceBody[], dt: number): boolean {
 }
 
 export function resolveCollisions(dice: DiceBody[]) {
-  for (let i = 0; i < dice.length; i++) {
-    const a = dice[i];
-    if (a.inCup) continue;
-    for (let j = i + 1; j < dice.length; j++) {
-      const b = dice[j];
-      if (b.inCup) continue;
+  // Multiple iterations for stability
+  const iterations = 3;
 
-      const dx = b.pos.x - a.pos.x;
-      const dy = b.pos.y - a.pos.y;
-      const dz = b.pos.z - a.pos.z;
-      const distSq = dx * dx + dy * dy + dz * dz;
-      const minD = COLL_R * 2;
+  for (let iter = 0; iter < iterations; iter++) {
+    for (let i = 0; i < dice.length; i++) {
+      const a = dice[i];
+      if (a.inCup) continue;
 
-      if (distSq < minD * minD && distSq > 1e-8) {
-        const dist = Math.sqrt(distSq);
-        const nx = dx / dist,
-          ny = dy / dist,
-          nz = dz / dist;
-        const overlap = minD - dist;
+      for (let j = i + 1; j < dice.length; j++) {
+        const b = dice[j];
+        if (b.inCup) continue;
 
-        // Push apart
-        const push = overlap * 0.5;
-        a.pos.x -= nx * push;
-        a.pos.y -= ny * push;
-        a.pos.z -= nz * push;
-        b.pos.x += nx * push;
-        b.pos.y += ny * push;
-        b.pos.z += nz * push;
+        const dx = b.pos.x - a.pos.x;
+        const dy = b.pos.y - a.pos.y;
+        const dz = b.pos.z - a.pos.z;
+        const distSq = dx * dx + dy * dy + dz * dz;
+        const minD = COLL_R * 2;
 
-        // Relative velocity
-        const rvx = b.vel.x - a.vel.x;
-        const rvy = b.vel.y - a.vel.y;
-        const rvz = b.vel.z - a.vel.z;
-        const velAlongN = rvx * nx + rvy * ny + rvz * nz;
+        if (distSq < minD * minD && distSq > 1e-8) {
+          const dist = Math.sqrt(distSq);
+          const nx = dx / dist;
+          const ny = dy / dist;
+          const nz = dz / dist;
+          const overlap = minD - dist;
 
-        if (velAlongN < 0) {
-          const jImp = -(1 + DIE_RESTITUTION) * velAlongN / 2;
-          a.vel.x -= jImp * nx;
-          a.vel.y -= jImp * ny;
-          a.vel.z -= jImp * nz;
-          b.vel.x += jImp * nx;
-          b.vel.y += jImp * ny;
-          b.vel.z += jImp * nz;
+          // Push apart with stronger separation
+          const push = overlap * 0.6; // Increased from 0.5
+          a.pos.x -= nx * push;
+          a.pos.y -= ny * push;
+          a.pos.z -= nz * push;
+          b.pos.x += nx * push;
+          b.pos.y += ny * push;
+          b.pos.z += nz * push;
 
-          a.resting = false;
-          b.resting = false;
-          a.settleT = 0;
-          b.settleT = 0;
+          // Keep dice above floor
+          if (a.pos.y < FLOOR_Y) a.pos.y = FLOOR_Y + 0.01;
+          if (b.pos.y < FLOOR_Y) b.pos.y = FLOOR_Y + 0.01;
 
-          const spinMag = Math.min(8, Math.abs(velAlongN) * 4);
-          a.ang.x += (Math.random() - 0.5) * spinMag;
-          a.ang.z += (Math.random() - 0.5) * spinMag;
-          b.ang.x += (Math.random() - 0.5) * spinMag;
-          b.ang.z += (Math.random() - 0.5) * spinMag;
+          // Relative velocity
+          const rvx = b.vel.x - a.vel.x;
+          const rvy = b.vel.y - a.vel.y;
+          const rvz = b.vel.z - a.vel.z;
+          const velAlongN = rvx * nx + rvy * ny + rvz * nz;
+
+          if (velAlongN < 0) {
+            const jImp = -(1 + DIE_RESTITUTION) * velAlongN / 2;
+            a.vel.x -= jImp * nx;
+            a.vel.y -= jImp * ny;
+            a.vel.z -= jImp * nz;
+            b.vel.x += jImp * nx;
+            b.vel.y += jImp * ny;
+            b.vel.z += jImp * nz;
+
+            a.resting = false;
+            b.resting = false;
+            a.settleT = 0;
+            b.settleT = 0;
+
+            const spinMag = Math.min(10, Math.abs(velAlongN) * 5);
+            a.ang.x += (Math.random() - 0.5) * spinMag;
+            a.ang.y += (Math.random() - 0.5) * spinMag;
+            a.ang.z += (Math.random() - 0.5) * spinMag;
+            b.ang.x += (Math.random() - 0.5) * spinMag;
+            b.ang.y += (Math.random() - 0.5) * spinMag;
+            b.ang.z += (Math.random() - 0.5) * spinMag;
+          }
+
+          a.mesh.position.copy(a.pos);
+          b.mesh.position.copy(b.pos);
         }
-
-        a.mesh.position.copy(a.pos);
-        b.mesh.position.copy(b.pos);
       }
     }
   }

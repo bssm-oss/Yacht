@@ -150,7 +150,7 @@ export function Dice3D({ values, held, onRollComplete, onCupClick, onToggleHold,
       // Cup shake animation
       if (cupAnim) {
         const result = updateCupShake(cupGroup, cupAnim, dt, dice.map((d) => d.mesh));
-        if (result.spilled && !result.finished) {
+        if (result.spilled && !result.finished && !rolling) {
           rolling = true;
           spillDice(dice, valuesRef.current);
         }
@@ -189,7 +189,7 @@ export function Dice3D({ values, held, onRollComplete, onCupClick, onToggleHold,
     // Expose API for parent
     (Dice3D as unknown as { api: Dice3DAPI }).api = {
       startRoll: (targetValues: DiceValue[], heldArr: boolean[]) => {
-        cupAnim = { t: 0, duration: 0.55, spilled: false };
+        cupAnim = { t: 0, duration: 0.9, spilled: false, spillProgress: 0 };
         dice.forEach((d, i) => {
           if (heldArr?.[i]) {
             d.targetValue = targetValues[i];
