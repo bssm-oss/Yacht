@@ -53,7 +53,7 @@ function App() {
               values={gameState.dice}
               held={gameState.held}
               onRollComplete={() => {}}
-              onCupClick={roll}
+              onRollClick={roll}
               onToggleHold={toggleHold}
               rollSeed={rollSeed}
             />

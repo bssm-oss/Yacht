@@ -46,7 +46,7 @@
 
 .tweaks {
   position: fixed;
-  bottom: 16px;
+  top: 58px;
   right: 16px;
   z-index: 40;
 }

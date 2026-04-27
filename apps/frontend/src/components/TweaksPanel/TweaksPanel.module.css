@@ -23,7 +23,7 @@
 
 .panel {
   position: absolute;
-  top: 44px;
+  bottom: 44px;
   right: 0;
   width: 200px;
   background: var(--panel-bg);

@@ -34,7 +34,7 @@ export function Dice3D({ values, held, onRollComplete, onToggleHold, onRollClick
 
   const valuesRef = useRef(values);
   const heldRef = useRef(held);
-  const callbacksRef = useRef({ onRollComplete, onToggleHold });
+  const callbacksRef = useRef({ onRollComplete, onToggleHold, onRollClick });
 
   useEffect(() => {
     valuesRef.current = values;
@@ -45,8 +45,8 @@ export function Dice3D({ values, held, onRollComplete, onToggleHold, onRollClick
   }, [held]);
 
   useEffect(() => {
-    callbacksRef.current = { onRollComplete, onToggleHold };
-  }, [onRollComplete, onToggleHold]);
+    callbacksRef.current = { onRollComplete, onToggleHold, onRollClick };
+  }, [onRollComplete, onToggleHold, onRollClick]);
 
   // Setup scene
   useEffect(() => {
