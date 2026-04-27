@@ -1,0 +1,85 @@
+:root {
+  /* Typography */
+  --font-display: 'SF Pro Display', 'SF Pro Icons', 'Helvetica Neue', 'Helvetica',
+    'Arial', sans-serif;
+  --font-text: 'SF Pro Text', 'SF Pro Icons', 'Helvetica Neue', 'Helvetica',
+    'Arial', sans-serif;
+
+  /* Light Theme (default) */
+  --bg-page: #f5f5f7;
+  --panel-bg: #ffffff;
+  --panel-border: rgba(0, 0, 0, 0.06);
+  --hairline: rgba(0, 0, 0, 0.08);
+  --row-hover: rgba(0, 113, 227, 0.04);
+  --pickable: rgba(0, 113, 227, 0.07);
+  --pickable-hover: rgba(0, 113, 227, 0.14);
+  --color-apple-blue: #0071e3;
+  --color-bright-blue: #2997ff;
+  --pip-active: #0071e3;
+  --pip-inactive: rgba(0, 0, 0, 0.14);
+  --text-primary: #1d1d1f;
+  --text-secondary: rgba(0, 0, 0, 0.55);
+  --text-tertiary: rgba(0, 0, 0, 0.35);
+
+  /* Tray moods (light) */
+  --felt-from-soft: #f5f5f7;
+  --felt-to-soft: #ececef;
+  --felt-from-warm: #f7f0e8;
+  --felt-to-warm: #ede2d4;
+  --felt-from-cool: #eef2f7;
+  --felt-to-cool: #e2e8f0;
+
+  /* Default mood */
+  --felt-from: var(--felt-from-soft);
+  --felt-to: var(--felt-to-soft);
+
+  /* Shadows */
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.08);
+  --shadow-focus: 0 0 0 3px rgba(0, 113, 227, 0.25);
+
+  /* Radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-pill: 999px;
+}
+
+/* Dark Theme */
+[data-theme='dark'] {
+  --bg-page: #0b0b0d;
+  --panel-bg: #161618;
+  --panel-border: rgba(255, 255, 255, 0.06);
+  --hairline: rgba(255, 255, 255, 0.08);
+  --row-hover: rgba(41, 151, 255, 0.06);
+  --pickable: rgba(41, 151, 255, 0.1);
+  --pickable-hover: rgba(41, 151, 255, 0.18);
+  --color-apple-blue: #2997ff;
+  --pip-active: #2997ff;
+  --pip-inactive: rgba(255, 255, 255, 0.2);
+  --text-primary: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.6);
+  --text-tertiary: rgba(255, 255, 255, 0.35);
+
+  --felt-from-soft: #1c1c1f;
+  --felt-to-soft: #131316;
+  --felt-from-warm: #1f1c19;
+  --felt-to-warm: #161310;
+  --felt-from-cool: #191c1f;
+  --felt-to-cool: #101316;
+}
+
+/* Mood overrides */
+[data-mood='warm'] {
+  --felt-from: var(--felt-from-warm);
+  --felt-to: var(--felt-to-warm);
+}
+
+[data-mood='cool'] {
+  --felt-from: var(--felt-from-cool);
+  --felt-to: var(--felt-to-cool);
+}
+
+[data-mood='soft'] {
+  --felt-from: var(--felt-from-soft);
+  --felt-to: var(--felt-to-soft);
+}
