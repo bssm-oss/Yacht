@@ -1,0 +1,66 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--bg-page);
+}
+
+.main {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+.gamePanel {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  overflow: hidden;
+}
+
+.diceStage {
+  position: relative;
+  background: linear-gradient(180deg, var(--felt-from) 0%, var(--felt-to) 100%);
+  overflow: hidden;
+}
+
+.hint {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-text);
+  font-size: 13px;
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(8px);
+  padding: 8px 16px;
+  border-radius: var(--radius-pill);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+[data-theme='dark'] .hint {
+  background: rgba(22, 22, 24, 0.8);
+}
+
+.tweaks {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  z-index: 40;
+}
+
+@media (max-width: 880px) {
+  .gamePanel {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+  }
+
+  .scoresheet {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--hairline);
+    max-height: 40vh;
+  }
+}
