@@ -2,7 +2,7 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "rootDir": ".",
+    "rootDir": "../..",
     "jsx": "react-jsx",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "types": ["vite/client"],
@@ -10,10 +10,10 @@
     "noUnusedParameters": false,
     "baseUrl": ".",
     "paths": {
-      "@shared/*": ["../../packages/shared/dist/*"],
+      "@shared/*": ["../../packages/shared/src/*"],
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src/**/*", "electron/**/*"],
-  "exclude": ["node_modules", "dist", "dist-electron"]
+  "include": ["src/**/*", "electron/**/*", "../../packages/shared/src/types/**/*", "../../packages/shared/src/scoring.ts", "../../packages/shared/src/index.ts"],
+  "exclude": ["node_modules", "dist", "dist-electron", "**/*.test.ts"]
 }

@@ -1,7 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.LOWER_CATEGORIES = exports.UPPER_CATEGORIES = exports.CATEGORY_KEYS = void 0;
-exports.CATEGORY_KEYS = [
+export const CATEGORY_KEYS = [
     'ones',
     'twos',
     'threes',
@@ -15,7 +12,7 @@ exports.CATEGORY_KEYS = [
     'lstraight',
     'yacht',
 ];
-exports.UPPER_CATEGORIES = [
+export const UPPER_CATEGORIES = [
     'ones',
     'twos',
     'threes',
@@ -23,7 +20,7 @@ exports.UPPER_CATEGORIES = [
     'fives',
     'sixes',
 ];
-exports.LOWER_CATEGORIES = [
+export const LOWER_CATEGORIES = [
     'choice',
     'fourkind',
     'fullhouse',
