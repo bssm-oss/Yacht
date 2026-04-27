@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import type { DiceValue } from '@shared/types/game';
 import { TRAY } from './tray';
 import { CUP } from './cup';
-import { makeUprightQuaternion } from './dieMesh';
+import { makeUprightQuaternion, createDieMesh } from './dieMesh';
 
 export const HALF = 0.24;
 export const FLOOR_Y = TRAY.floorY + HALF;
@@ -27,7 +27,6 @@ export interface DiceBody {
 export function createDice(): DiceBody[] {
   const dice: DiceBody[] = [];
   for (let i = 0; i < 5; i++) {
-    const { createDieMesh } = require('./dieMesh');
     const mesh = createDieMesh();
     const inCupX = CUP.x + (Math.random() - 0.5) * 0.4;
     const inCupY = CUP.y + (i - 2) * 0.18;
