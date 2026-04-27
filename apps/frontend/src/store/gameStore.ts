@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type { DiceValue, Scorecard, Player, GameState } from '@shared/types/game';
-import { makeEmptyScorecard, allFilled, scoreCategory } from '@shared/scoring';
+import { makeEmptyScorecard, allFilled, scoreCategory, computeTotals } from '@shared/scoring';
 
 function randomDice(): DiceValue[] {
   return Array.from({ length: 5 }, () =>
@@ -104,7 +104,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
       // If all players have filled cards, find winner
       const allDone = newPlayers.every((p) => allFilled(p.card));
       if (allDone) {
-        const { computeTotals } = require('@shared/scoring');
         let bestId = newPlayers[0].id;
         let bestScore = -1;
         for (const p of newPlayers) {
