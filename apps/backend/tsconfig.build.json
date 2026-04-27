@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "../..",
+    "composite": false,
+    "baseUrl": ".",
+    "paths": {
+      "@shared/*": ["../../packages/shared/src/*"]
+    }
+  },
+  "include": ["src/**/*", "../../packages/shared/src/types/**/*", "../../packages/shared/src/scoring.ts", "../../packages/shared/src/index.ts"],
+  "exclude": ["node_modules", "dist", "test", "**/*.test.ts"]
+}

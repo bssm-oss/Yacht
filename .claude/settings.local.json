@@ -5,7 +5,11 @@
       "Bash(curl -v \"https://api.anthropic.com/v1/design/h/3jjF5xKlwMypQyO4NkW9Mg\")",
       "Bash(curl -s -L \"https://api.anthropic.com/v1/design/h/3jjF5xKlwMypQyO4NkW9Mg\" -o design.tar.gz)",
       "Bash(mkdir -p design_extracted)",
-      "Bash(tar -xzf design.tar.gz -C design_extracted)"
+      "Bash(tar -xzf design.tar.gz -C design_extracted)",
+      "Bash(pnpm build *)",
+      "Bash(npx pnpm *)",
+      "Bash(export PATH=\"$HOME/.nvm/versions/node/v22.22.2/bin:$PATH\")",
+      "Bash(xargs ls *)"
     ]
   }
 }

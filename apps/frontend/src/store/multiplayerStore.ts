@@ -2,9 +2,9 @@ import { create } from 'zustand';
 import { io, Socket } from 'socket.io-client';
 import type { GameState, Scorecard } from '@shared/types/game';
 
-type ConnectionState = 'disconnected' | 'connecting' | 'connected';
+export type ConnectionState = 'disconnected' | 'connecting' | 'connected';
 
-interface MultiplayerStore {
+export interface MultiplayerStore {
   socket: Socket | null;
   roomId: string | null;
   playerId: string | null;

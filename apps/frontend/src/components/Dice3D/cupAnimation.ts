@@ -57,6 +57,7 @@ export function spillDice(
     resting: boolean;
     inCup: boolean;
     settleT: number;
+    targetValue?: DiceValue;
   }>,
   targetValues: DiceValue[]
 ) {

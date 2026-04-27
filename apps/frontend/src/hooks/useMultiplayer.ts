@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { useMultiplayerStore } from '../store/multiplayerStore';
+import type { MultiplayerStore } from '../store/multiplayerStore';
 
-export function useMultiplayer() {
+export function useMultiplayer(): MultiplayerStore {
   const multiplayer = useMultiplayerStore();
-  const gameStore = useGameStore();
 
   useEffect(() => {
     if (multiplayer.gameState) {

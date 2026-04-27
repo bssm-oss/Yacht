@@ -1,4 +1,5 @@
-import type { DiceValue, Scorecard } from '../types/game';
+import type { DiceValue, Scorecard } from './types/game';
+import { UPPER_CATEGORIES, LOWER_CATEGORIES } from './types/game';
 
 export const sumOf = (dice: DiceValue[]): number => dice.reduce((a, b) => a + b, 0);
 
@@ -93,15 +94,12 @@ export const computeTotals = (card: Scorecard): { upper: number; lower: number; 
   let upper = 0;
   let lower = 0;
 
-  const upperKeys: (keyof Scorecard)[] = ['ones', 'twos', 'threes', 'fours', 'fives', 'sixes'];
-  const lowerKeys: (keyof Scorecard)[] = ['choice', 'fourkind', 'fullhouse', 'sstraight', 'lstraight', 'yacht'];
-
-  for (const key of upperKeys) {
+  for (const key of UPPER_CATEGORIES) {
     const v = card[key];
     if (v != null) upper += v;
   }
 
-  for (const key of lowerKeys) {
+  for (const key of LOWER_CATEGORIES) {
     const v = card[key];
     if (v != null) lower += v;
   }

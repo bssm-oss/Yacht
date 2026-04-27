@@ -1,5 +1,6 @@
 import type { Player, Scorecard, DiceValue } from '@shared/types/game';
-import { CATEGORY_SCORERS, computeTotals, UPPER_CATEGORIES, LOWER_CATEGORIES } from '@shared/scoring';
+import { CATEGORY_SCORERS, computeTotals } from '@shared/scoring';
+import { UPPER_CATEGORIES, LOWER_CATEGORIES } from '@shared/types/game';
 import styles from './Scoreboard.module.css';
 
 interface ScoreboardProps {
