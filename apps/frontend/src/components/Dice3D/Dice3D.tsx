@@ -5,7 +5,7 @@ import { createTray, createGroundShadow, TRAY } from './tray';
 import { createCup, CUP } from './cup';
 import { createDice, layoutInTray, stepPhysics, resolveCollisions, DiceBody } from './physics';
 import { makeUprightQuaternion } from './dieMesh';
-import { updateCupShake, spillDice, CupAnimation } from './cupAnimation';
+import { updateCupShake, CupAnimation } from './cupAnimation';
 
 import styles from './Dice3D.module.css';
 
@@ -13,12 +13,12 @@ interface Dice3DProps {
   values: DiceValue[];
   held: boolean[];
   onRollComplete?: () => void;
-  onCupClick?: () => void;
   onToggleHold?: (index: number) => void;
+  onRollClick?: () => void;
   rollSeed?: number;
 }
 
-export function Dice3D({ values, held, onRollComplete, onCupClick, onToggleHold, rollSeed = 0 }: Dice3DProps) {
+export function Dice3D({ values, held, onRollComplete, onToggleHold, onRollClick, rollSeed = 0 }: Dice3DProps) {
   const mountRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<{
     scene: THREE.Scene;
@@ -26,6 +26,7 @@ export function Dice3D({ values, held, onRollComplete, onCupClick, onToggleHold,
     renderer: THREE.WebGLRenderer;
     dice: DiceBody[];
     cupGroup: THREE.Group;
+    heldLights: THREE.PointLight[];
     cupAnim: CupAnimation | null;
     rolling: boolean;
     raf: number;
@@ -33,7 +34,7 @@ export function Dice3D({ values, held, onRollComplete, onCupClick, onToggleHold,
 
   const valuesRef = useRef(values);
   const heldRef = useRef(held);
-  const callbacksRef = useRef({ onRollComplete, onCupClick, onToggleHold });
+  const callbacksRef = useRef({ onRollComplete, onToggleHold });
 
   useEffect(() => {
     valuesRef.current = values;
@@ -44,8 +45,8 @@ export function Dice3D({ values, held, onRollComplete, onCupClick, onToggleHold,
   }, [held]);
 
   useEffect(() => {
-    callbacksRef.current = { onRollComplete, onCupClick, onToggleHold };
-  }, [onRollComplete, onCupClick, onToggleHold]);
+    callbacksRef.current = { onRollComplete, onToggleHold };
+  }, [onRollComplete, onToggleHold]);
 
   // Setup scene
   useEffect(() => {
@@ -98,6 +99,15 @@ export function Dice3D({ values, held, onRollComplete, onCupClick, onToggleHold,
     dice.forEach((d) => scene.add(d.mesh));
     layoutInTray(dice, valuesRef.current);
 
+    // Held indicator lights (one per die)
+    const heldLights: THREE.PointLight[] = [];
+    for (let i = 0; i < 5; i++) {
+      const light = new THREE.PointLight(0x0071e3, 0, 2);
+      light.position.set(0, 0, 0);
+      scene.add(light);
+      heldLights.push(light);
+    }
+
     // Resize observer
     const onResize = () => {
       const w2 = mount.clientWidth;
@@ -129,9 +139,10 @@ export function Dice3D({ values, held, onRollComplete, onCupClick, onToggleHold,
         return;
       }
 
-      // Otherwise cup click
-      if (callbacksRef.current.onCupClick) {
-        callbacksRef.current.onCupClick();
+      // Check cup click for roll
+      const cupHit = raycaster.intersectObjects(cupGroup.children, true);
+      if (cupHit.length && callbacksRef.current.onRollClick) {
+        callbacksRef.current.onRollClick();
       }
     };
     renderer.domElement.addEventListener('pointerdown', onPointerDown);
@@ -147,17 +158,53 @@ export function Dice3D({ values, held, onRollComplete, onCupClick, onToggleHold,
       const dt = Math.min(0.033, (now - lastT) / 1000);
       lastT = now;
 
-      // Cup shake animation
+      // Cup animation
       if (cupAnim) {
-        const result = updateCupShake(cupGroup, cupAnim, dt, dice.map((d) => d.mesh));
-        if (result.spilled && !result.finished && !rolling) {
+        const result = updateCupShake(cupGroup, cupAnim, dt, dice, valuesRef.current);
+        if (result.diceReleased && !rolling) {
           rolling = true;
-          spillDice(dice, valuesRef.current);
         }
         if (result.finished) {
           cupAnim = null;
         }
       }
+
+      // Update held dice positions and lights
+      const heldArr = heldRef.current;
+      dice.forEach((d, i) => {
+        if (heldArr?.[i] && !d.inCup && d.resting) {
+          // Move held dice to top area
+          const targetX = TRAY.minX + (TRAY.maxX - TRAY.minX) * (0.15 + i * 0.18);
+          const targetZ = TRAY.minZ + 0.5;
+          const targetY = HALF + 0.1;
+
+          // Smooth lerp to held position
+          d.pos.x += (targetX - d.pos.x) * 0.1;
+          d.pos.z += (targetZ - d.pos.z) * 0.1;
+          d.pos.y += (targetY - d.pos.y) * 0.1;
+          d.mesh.position.copy(d.pos);
+
+          // Update glow light
+          heldLights[i].position.copy(d.pos);
+          heldLights[i].position.y += 0.3;
+          heldLights[i].intensity = 1.5;
+
+          // Blue emissive glow on die
+          const materials = d.mesh.material as THREE.MeshStandardMaterial[];
+          materials.forEach((mat) => {
+            mat.emissive.setHex(0x0071e3);
+            mat.emissiveIntensity = 0.3;
+          });
+        } else {
+          // Turn off glow
+          heldLights[i].intensity = 0;
+          const materials = d.mesh.material as THREE.MeshStandardMaterial[];
+          materials.forEach((mat) => {
+            mat.emissive.setHex(0x000000);
+            mat.emissiveIntensity = 0;
+          });
+        }
+      });
 
       // Physics
       const rollingAny = stepPhysics(dice, dt);
@@ -181,6 +228,7 @@ export function Dice3D({ values, held, onRollComplete, onCupClick, onToggleHold,
       renderer,
       dice,
       cupGroup,
+      heldLights,
       cupAnim,
       rolling,
       raf,
@@ -189,7 +237,7 @@ export function Dice3D({ values, held, onRollComplete, onCupClick, onToggleHold,
     // Expose API for parent
     (Dice3D as unknown as { api: Dice3DAPI }).api = {
       startRoll: (targetValues: DiceValue[], heldArr: boolean[]) => {
-        cupAnim = { t: 0, duration: 0.9, spilled: false, spillProgress: 0 };
+        cupAnim = { t: 0, duration: 1.2, spilled: false, phase: 'shake' };
         dice.forEach((d, i) => {
           if (heldArr?.[i]) {
             d.targetValue = targetValues[i];
@@ -212,17 +260,6 @@ export function Dice3D({ values, held, onRollComplete, onCupClick, onToggleHold,
           if (!d.resting) return;
           d.targetValue = vals[i];
           d.mesh.quaternion.copy(makeUprightQuaternion(vals[i], (i - 2) * 0.06));
-        });
-      },
-      getDicePositions: () => {
-        return dice.map((d) => {
-          const v = d.mesh.position.clone().project(camera);
-          const rect = mount.getBoundingClientRect();
-          return {
-            x: (v.x * 0.5 + 0.5) * rect.width,
-            y: (-v.y * 0.5 + 0.5) * rect.height,
-            inCup: d.inCup,
-          };
         });
       },
     };
@@ -262,7 +299,7 @@ export function Dice3D({ values, held, onRollComplete, onCupClick, onToggleHold,
 
   return (
     <div className={styles.mount} ref={mountRef}>
-      <HeldOverlay held={held} />
+      <RollButton onClick={onRollClick} />
     </div>
   );
 }
@@ -270,41 +307,16 @@ export function Dice3D({ values, held, onRollComplete, onCupClick, onToggleHold,
 interface Dice3DAPI {
   startRoll: (targetValues: DiceValue[], heldArr: boolean[]) => void;
   syncRestingValues: (vals: DiceValue[]) => void;
-  getDicePositions: () => { x: number; y: number; inCup: boolean }[];
 }
 
-function HeldOverlay({ held }: { held: boolean[] }) {
-  const [, force] = useState(0);
-
-  useEffect(() => {
-    let alive = true;
-    const tick = () => {
-      if (!alive) return;
-      force((t) => (t + 1) % 1024);
-      requestAnimationFrame(tick);
-    };
-    tick();
-    return () => {
-      alive = false;
-    };
-  }, []);
-
-  const api = (Dice3D as unknown as { api?: Dice3DAPI }).api;
-  if (!api) return null;
-
-  const pts = api.getDicePositions();
+function RollButton({ onClick }: { onClick?: () => void }) {
   return (
-    <div className={styles.heldOverlay}>
-      {pts.map(
-        (p, i) =>
-          held?.[i] && !p.inCup && (
-            <div key={i} className={styles.heldPill} style={{ left: p.x, top: p.y + 44 }}>
-              <span className={styles.heldDot} />
-              Held
-            </div>
-          )
-      )}
-    </div>
+    <button className={styles.rollBtn} onClick={onClick}>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+      </svg>
+      Roll
+    </button>
   );
 }
 

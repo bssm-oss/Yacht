@@ -6,97 +6,19 @@ export interface CupAnimation {
   t: number;
   duration: number;
   spilled: boolean;
-  spillProgress: number;
+  phase: 'shake' | 'tilt' | 'pour' | 'reset';
 }
 
-// Cup tilt animation phases
-// Phase 1: Shake (0-60%)
-// Phase 2: Tilt toward tray (60-80%)
-// Phase 3: Spill (80-100%)
+// Cup animation:
+// 1. Shake (0-25%)
+// 2. Tilt left toward tray (25-40%)
+// 3. Pour - dice fly out with acceleration (40-70%)
+// 4. Reset cup (70-100%)
 
 export function updateCupShake(
   cupGroup: THREE.Group,
   cupAnim: CupAnimation,
   dt: number,
-  diceMeshes: THREE.Mesh[]
-): { finished: boolean; spilled: boolean; tilting: boolean } {
-  cupAnim.t += dt;
-  const p = cupAnim.t / cupAnim.duration;
-
-  // Phase 1: Shake (0-60%)
-  if (p < 0.6) {
-    const shakeP = p / 0.6;
-    const amp = (1 - shakeP) * 0.35;
-    const freq = 22;
-    cupGroup.rotation.z = Math.sin(cupAnim.t * freq) * amp;
-    cupGroup.rotation.x = Math.cos(cupAnim.t * freq * 0.83) * amp * 0.6;
-    cupGroup.position.y = CUP.y + Math.abs(Math.sin(cupAnim.t * freq * 0.5)) * 0.15;
-
-    // Jiggle dice in cup
-    for (const mesh of diceMeshes) {
-      mesh.position.set(
-        CUP.x + Math.sin(cupAnim.t * freq + mesh.id) * 0.18,
-        CUP.y + Math.cos(cupAnim.t * freq * 0.7 + mesh.id) * 0.12,
-        CUP.z + Math.sin(cupAnim.t * freq * 0.5 + mesh.id) * 0.18
-      );
-      mesh.rotateX(dt * 8);
-      mesh.rotateY(dt * 7);
-    }
-
-    return { finished: false, spilled: false, tilting: false };
-  }
-  // Phase 2: Tilt toward tray (60-80%)
-  else if (p < 0.8) {
-    const tiltP = (p - 0.6) / 0.2;
-    const easeTilt = tiltP * tiltP * (3 - 2 * tiltP); // smoothstep
-
-    // Tilt cup toward tray (negative X direction)
-    cupGroup.rotation.z = 0;
-    cupGroup.rotation.x = -easeTilt * 0.8; // Tilt forward
-    cupGroup.rotation.y = easeTilt * 0.3; // Slight twist
-    cupGroup.position.y = CUP.y - easeTilt * 0.2;
-    cupGroup.position.x = CUP.x - easeTilt * 0.3;
-
-    // Move dice toward cup opening
-    for (const mesh of diceMeshes) {
-      const offsetFromCenter = mesh.position.clone().sub(new THREE.Vector3(CUP.x, CUP.y, CUP.z));
-      // Push dice toward the tilted side
-      mesh.position.x = CUP.x + offsetFromCenter.x * 0.8 - easeTilt * 0.4;
-      mesh.position.y = CUP.y + offsetFromCenter.y * 0.8 + easeTilt * 0.1;
-      mesh.position.z = CUP.z + offsetFromCenter.z * 0.9;
-      mesh.rotateX(dt * 4);
-      mesh.rotateZ(dt * 3);
-    }
-
-    return { finished: false, spilled: false, tilting: true };
-  }
-  // Phase 3: Spill (80-100%)
-  else if (!cupAnim.spilled) {
-    cupAnim.spilled = true;
-    cupAnim.spillProgress = 0;
-    return { finished: false, spilled: true, tilting: false };
-  }
-  // Reset cup after spill
-  else if (p < 1) {
-    const resetP = (p - 0.8) / 0.2;
-    const easeReset = resetP * resetP * (3 - 2 * resetP);
-
-    // Gradually reset cup position
-    cupGroup.rotation.x = -0.8 * (1 - easeReset);
-    cupGroup.rotation.y = 0.3 * (1 - easeReset);
-    cupGroup.position.x = CUP.x - 0.3 * (1 - easeReset);
-    cupGroup.position.y = CUP.y - 0.2 * (1 - easeReset);
-
-    return { finished: false, spilled: true, tilting: false };
-  }
-
-  // Fully reset
-  cupGroup.rotation.set(0, 0, 0);
-  cupGroup.position.set(CUP.x, CUP.y, CUP.z);
-  return { finished: true, spilled: true, tilting: false };
-}
-
-export function spillDice(
   dice: Array<{
     pos: THREE.Vector3;
     vel: THREE.Vector3;
@@ -108,41 +30,127 @@ export function spillDice(
     targetValue?: DiceValue;
   }>,
   targetValues: DiceValue[]
-) {
-  dice.forEach((d, i) => {
-    if (!d.inCup) return;
-    d.inCup = false;
-    d.targetValue = targetValues[i];
+): { finished: boolean; diceReleased: boolean } {
+  cupAnim.t += dt;
+  const p = cupAnim.t / cupAnim.duration;
 
-    // Position at cup opening (tilted side)
-    const angle = (i / dice.length) * Math.PI - Math.PI / 2;
-    const radius = 0.6 + Math.random() * 0.3;
+  // Phase 1: Shake (0-25%)
+  if (p < 0.25) {
+    cupAnim.phase = 'shake';
+    const shakeP = p / 0.25;
+    const amp = (1 - shakeP * 0.3) * 0.4;
+    const freq = 24;
+    cupGroup.rotation.z = Math.sin(cupAnim.t * freq) * amp;
+    cupGroup.rotation.x = Math.cos(cupAnim.t * freq * 0.7) * amp * 0.5;
+    cupGroup.position.y = CUP.y + Math.abs(Math.sin(cupAnim.t * freq * 0.5)) * 0.12;
 
-    d.pos.set(
-      CUP.x - 0.8 + Math.cos(angle) * radius * 0.5, // Toward tray
-      CUP.y + 0.3 + Math.random() * 0.2, // Slightly above cup rim
-      CUP.z + Math.sin(angle) * radius * 0.8
-    );
+    // Jiggle dice in cup
+    for (const d of dice) {
+      if (!d.inCup) continue;
+      d.mesh.position.set(
+        CUP.x + Math.sin(cupAnim.t * freq + d.mesh.id) * 0.15,
+        CUP.y + Math.cos(cupAnim.t * freq * 0.6 + d.mesh.id) * 0.1,
+        CUP.z + Math.sin(cupAnim.t * freq * 0.4 + d.mesh.id) * 0.15
+      );
+      d.mesh.rotateX(dt * 6);
+      d.mesh.rotateY(dt * 5);
+    }
 
-    // Velocity toward tray with spread
-    d.vel.set(
-      -3.5 - Math.random() * 2, // Strong X velocity toward tray
-      1.5 + Math.random() * 1.5, // Upward arc
-      (Math.random() - 0.5) * 3 // Spread in Z
-    );
+    return { finished: false, diceReleased: false };
+  }
+  // Phase 2: Tilt LEFT toward tray (25-40%)
+  else if (p < 0.4) {
+    cupAnim.phase = 'tilt';
+    const tiltP = (p - 0.25) / 0.15;
+    const easeTilt = tiltP * tiltP * (3 - 2 * tiltP);
 
-    // Angular velocity
-    d.ang.set(
-      (Math.random() - 0.5) * 15,
-      (Math.random() - 0.5) * 15,
-      (Math.random() - 0.5) * 15
-    );
+    // Tilt cup LEFT (toward negative X / tray direction)
+    // Rotate around Z axis to tilt left
+    cupGroup.rotation.z = easeTilt * 1.0; // Tilt left
+    cupGroup.rotation.x = Math.sin(easeTilt * Math.PI) * 0.2; // Slight forward wobble
+    cupGroup.position.x = CUP.x - easeTilt * 0.4; // Move slightly toward tray
+    cupGroup.position.y = CUP.y + Math.sin(easeTilt * Math.PI) * 0.15; // Dip down then up
 
-    d.mesh.position.copy(d.pos);
-    d.mesh.quaternion.setFromEuler(
-      new THREE.Euler(Math.random() * Math.PI * 2, Math.random() * Math.PI * 2, Math.random() * Math.PI * 2)
-    );
-    d.resting = false;
-    d.settleT = 0;
-  });
+    // Dice slide toward left opening
+    for (const d of dice) {
+      if (!d.inCup) continue;
+      const offsetX = d.mesh.position.x - CUP.x;
+      const offsetZ = d.mesh.position.z - CUP.z;
+      // Gravity pulls dice toward tilted left side
+      d.mesh.position.x += (-0.8 - offsetX * 0.6) * dt * 3;
+      d.mesh.position.y += (-0.3) * dt * 2;
+      d.mesh.position.z += (-offsetZ * 0.4) * dt * 2;
+      d.mesh.rotateX(dt * 8);
+      d.mesh.rotateZ(dt * 6);
+    }
+
+    return { finished: false, diceReleased: false };
+  }
+  // Phase 3: Pour (40-70%) - dice FLY out with force
+  else if (p < 0.7) {
+    if (cupAnim.phase !== 'pour') {
+      cupAnim.phase = 'pour';
+      // Release dice with strong velocity
+      dice.forEach((d, i) => {
+        if (!d.inCup) return;
+        d.inCup = false;
+        d.targetValue = targetValues[i];
+
+        // Position at cup opening (left side)
+        const offsetX = d.mesh.position.x - CUP.x;
+        const offsetZ = d.mesh.position.z - CUP.z;
+
+        d.pos.set(
+          CUP.x - 0.9 + offsetX * 0.3,
+          CUP.y + 0.2,
+          CUP.z + offsetZ * 0.3
+        );
+
+        // STRONG velocity toward tray (left/down)
+        const spread = 0.8;
+        d.vel.set(
+          -6 - Math.random() * 3, // Strong leftward velocity
+          2 + Math.random() * 2, // Upward arc
+          (Math.random() - 0.5) * spread // Slight Z spread
+        );
+
+        // High angular velocity for tumbling
+        d.ang.set(
+          (Math.random() - 0.5) * 20,
+          (Math.random() - 0.5) * 20,
+          (Math.random() - 0.5) * 20
+        );
+
+        d.mesh.position.copy(d.pos);
+        d.resting = false;
+        d.settleT = 0;
+      });
+    }
+
+    // Keep cup tilted during pour
+    cupGroup.rotation.z = 1.0;
+    cupGroup.rotation.x = 0.2;
+    cupGroup.position.x = CUP.x - 0.4;
+    cupGroup.position.y = CUP.y;
+
+    return { finished: false, diceReleased: true };
+  }
+  // Phase 4: Reset (70-100%)
+  else if (p < 1) {
+    cupAnim.phase = 'reset';
+    const resetP = (p - 0.7) / 0.3;
+    const easeReset = resetP * resetP * (3 - 2 * resetP);
+
+    cupGroup.rotation.z = 1.0 * (1 - easeReset);
+    cupGroup.rotation.x = 0.2 * (1 - easeReset);
+    cupGroup.position.x = CUP.x - 0.4 * (1 - easeReset);
+    cupGroup.position.y = CUP.y;
+
+    return { finished: false, diceReleased: true };
+  }
+
+  // Fully reset
+  cupGroup.rotation.set(0, 0, 0);
+  cupGroup.position.set(CUP.x, CUP.y, CUP.z);
+  return { finished: true, diceReleased: true };
 }
