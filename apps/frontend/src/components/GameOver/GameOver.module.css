@@ -1,0 +1,110 @@
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(245, 245, 247, 0.85);
+  backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+[data-theme='dark'] .overlay {
+  background: rgba(11, 11, 13, 0.85);
+}
+
+.card {
+  background: var(--panel-bg);
+  border-radius: var(--radius-lg);
+  padding: 32px 40px;
+  box-shadow: var(--shadow-card);
+  text-align: center;
+  min-width: 320px;
+}
+
+.eyebrow {
+  font-family: var(--font-text);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--color-apple-blue);
+  margin-bottom: 8px;
+}
+
+.winner {
+  margin-bottom: 24px;
+}
+
+.winnerName {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.winnerScore {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.scores {
+  margin-bottom: 24px;
+  text-align: left;
+}
+
+.scoreRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.scoreRow:last-child {
+  border-bottom: none;
+}
+
+.rank {
+  font-family: var(--font-text);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  width: 24px;
+}
+
+.name {
+  flex: 1;
+  font-family: var(--font-text);
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.score {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.playAgainBtn {
+  font-family: var(--font-text);
+  font-size: 15px;
+  font-weight: 500;
+  color: white;
+  background: var(--color-apple-blue);
+  border: none;
+  padding: 10px 24px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.playAgainBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 113, 227, 0.35);
+}
