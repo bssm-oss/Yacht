@@ -1,0 +1,92 @@
+.header {
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--hairline);
+  background: var(--panel-bg);
+}
+
+.left {
+  display: flex;
+  align-items: center;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-primary);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.center {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.playerInput {
+  font-family: var(--font-text);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-primary);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid transparent;
+  padding: 4px 8px;
+  text-align: center;
+  min-width: 120px;
+  transition: border-color 0.15s ease;
+}
+
+.playerInput:hover,
+.playerInput:focus {
+  border-bottom-color: var(--hairline);
+  outline: none;
+}
+
+.pips {
+  display: flex;
+  gap: 4px;
+}
+
+.pip {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--pip-inactive);
+  transition: background 0.2s ease;
+}
+
+.pip.active {
+  background: var(--pip-active);
+}
+
+.right {
+  display: flex;
+  align-items: center;
+}
+
+.newGameBtn {
+  font-family: var(--font-text);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-apple-blue);
+  background: transparent;
+  border: none;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.newGameBtn:hover {
+  background: rgba(0, 113, 227, 0.08);
+}
