@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import type { DiceValue } from '@shared/types/game';
 
 export const FACE_VALUES: DiceValue[] = [1, 6, 2, 5, 3, 4]; // +X,-X,+Y,-Y,+Z,-Z
@@ -109,13 +110,14 @@ export function makeUprightQuaternion(value: number, spinY = 0): THREE.Quaternio
 
 export function createDieMesh(): THREE.Mesh {
   const HALF = 0.24;
-  const geo = new THREE.BoxGeometry(HALF * 2, HALF * 2, HALF * 2);
+  const size = HALF * 2;
+  const geo = new RoundedBoxGeometry(size, size, size, 4, 0.10);
   const mats = FACE_VALUES.map(
     (v) =>
       new THREE.MeshStandardMaterial({
         map: makeFaceTexture(v),
-        roughness: 0.42,
-        metalness: 0.05,
+        roughness: 0.38,
+        metalness: 0.06,
       })
   );
   const mesh = new THREE.Mesh(geo, mats);
