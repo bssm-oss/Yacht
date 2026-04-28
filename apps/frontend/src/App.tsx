@@ -7,6 +7,8 @@ import { Dice3D } from './components/Dice3D/Dice3D';
 import { GameOver } from './components/GameOver/GameOver';
 import { NewGameModal } from './components/NewGameModal/NewGameModal';
 import { TweaksPanel, type Theme, type Mood } from './components/TweaksPanel/TweaksPanel';
+import { CATEGORY_KEYS } from '@shared/types/game';
+import { scoreCategory } from '@shared/scoring';
 
 import styles from './styles/layout.module.css';
 
@@ -21,6 +23,10 @@ function App() {
   const [turnAnnounce, setTurnAnnounce] = useState<{ name: string; hiding: boolean } | null>(null);
   const prevActiveIndexRef = useRef(-1);
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const TURN_LIMIT = 30;
+  const [timeLeft, setTimeLeft] = useState(TURN_LIMIT);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const isOnline = multiplayer.connectionState === 'connected';
 
@@ -70,6 +76,42 @@ function App() {
     }
   }, [gameState.activePlayerIndex, gameState.phase]);
 
+  // 턴 타이머
+  useEffect(() => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    if (gameState.phase !== 'playing') { setTimeLeft(TURN_LIMIT); return; }
+
+    setTimeLeft(TURN_LIMIT);
+    timerRef.current = setInterval(() => {
+      setTimeLeft((t) => {
+        if (t <= 1) {
+          clearInterval(timerRef.current!);
+          return 0;
+        }
+        return t - 1;
+      });
+    }, 1000);
+
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [gameState.activePlayerIndex, gameState.phase]);
+
+  // 시간 초과 시 자동 처리: 가장 높은 점수 카테고리 선택
+  useEffect(() => {
+    if (timeLeft !== 0 || gameState.phase !== 'playing') return;
+    const player = gameState.players[gameState.activePlayerIndex];
+    const emptyCats = CATEGORY_KEYS.filter((k) => player?.card[k] == null);
+    if (emptyCats.length === 0) return;
+    const bestCat = emptyCats.reduce((best, k) => {
+      return scoreCategory(k, gameState.dice) >= scoreCategory(best, gameState.dice) ? k : best;
+    });
+    if (gameState.rollsUsed === 0) {
+      handleRoll();
+      setTimeout(() => handlePickCategory(bestCat), 300);
+    } else {
+      handlePickCategory(bestCat);
+    }
+  }, [timeLeft]);
+
   const handleRoll = isOnline ? multiplayer.roll : local.roll;
   const handleToggleHold = isOnline ? multiplayer.hold : local.toggleHold;
   const handlePickCategory = isOnline ? multiplayer.pickCategory : local.pickCategory;
@@ -109,6 +151,24 @@ function App() {
           />
 
           <div className={styles.diceStage}>
+            {gameState.phase === 'playing' && (
+              <div
+                className={styles.turnTimer}
+                data-urgent={timeLeft <= 10 ? '' : undefined}
+              >
+                <svg viewBox="0 0 36 36" className={styles.timerRing}>
+                  <circle cx="18" cy="18" r="15.9" fill="none" strokeWidth="2.8" className={styles.timerTrack} />
+                  <circle
+                    cx="18" cy="18" r="15.9" fill="none" strokeWidth="2.8"
+                    className={styles.timerProgress}
+                    strokeDasharray={`${(timeLeft / TURN_LIMIT) * 100} 100`}
+                    strokeDashoffset="25"
+                  />
+                </svg>
+                <span className={styles.timerNum}>{timeLeft}</span>
+              </div>
+            )}
+
             <Dice3D
               values={gameState.dice}
               held={gameState.held}

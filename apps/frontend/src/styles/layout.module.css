@@ -69,6 +69,57 @@
   z-index: 1000;
 }
 
+.turnTimer {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 52px;
+  height: 52px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.timerRing {
+  position: absolute;
+  inset: 0;
+  transform: rotate(-90deg);
+}
+
+.timerTrack {
+  stroke: rgba(255, 255, 255, 0.2);
+}
+
+.timerProgress {
+  stroke: rgba(255, 255, 255, 0.85);
+  stroke-linecap: round;
+  transition: stroke-dasharray 0.9s linear, stroke 0.3s ease;
+}
+
+.turnTimer[data-urgent] .timerProgress {
+  stroke: #ff453a;
+  animation: timerPulse 0.6s ease-in-out infinite alternate;
+}
+
+.timerNum {
+  position: relative;
+  font-family: var(--font-text);
+  font-size: 15px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1;
+}
+
+.turnTimer[data-urgent] .timerNum {
+  color: #ff453a;
+}
+
+@keyframes timerPulse {
+  from { opacity: 0.7; }
+  to   { opacity: 1; }
+}
+
 .turnOverlay {
   position: fixed;
   inset: 0;
