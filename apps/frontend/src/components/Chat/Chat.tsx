@@ -20,6 +20,7 @@ export function Chat({ messages, playerId, onSend }: ChatProps) {
   }, []);
 
   const closeInput = useCallback(() => {
+    inputRef.current?.blur();
     setInputActive(false);
     setInput('');
   }, []);
@@ -70,6 +71,7 @@ export function Chat({ messages, playerId, onSend }: ChatProps) {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => {
+            if (e.nativeEvent.isComposing) return;
             if (e.key === 'Enter') { e.preventDefault(); handleSend(); }
             if (e.key === 'Escape') closeInput();
           }}
