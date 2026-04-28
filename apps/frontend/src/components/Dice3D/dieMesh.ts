@@ -5,14 +5,17 @@ import type { DiceValue } from '@shared/types/game';
 export const FACE_VALUES: DiceValue[] = [1, 6, 2, 5, 3, 4]; // +X,-X,+Y,-Y,+Z,-Z
 
 export function makeFaceTexture(value: number, opts: { bg?: string; pip?: string; border?: string } = {}): THREE.CanvasTexture {
-  const { bg = '#ffffff', pip = '#1d1d1f', border = '#e5e5e7' } = opts;
+  const { bg = '#faf8f4', pip = '#1d1d1f', border = '#dcdcdc' } = opts;
   const size = 256;
   const c = document.createElement('canvas');
   c.width = c.height = size;
   const ctx = c.getContext('2d')!;
   const r = 36;
 
+  // Fill entire canvas first so RoundedBoxGeometry UV edges don't show black
   ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, size, size);
+
   ctx.beginPath();
   ctx.moveTo(r, 0);
   ctx.lineTo(size - r, 0);
