@@ -59,7 +59,7 @@ export function NewGameModal({ onStartLocal, onClose }: NewGameModalProps) {
 
   return (
     <div className={styles.overlay} onPointerDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div className={styles.modal}>
+      <div className={`${styles.modal} ${tab === 'online' && onlineTab === 'browse' && !isConnected ? styles.modalWide : ''}`}>
         <div className={styles.modalHeader}>
           <h2 className={styles.title}>새 게임</h2>
           <button className={styles.closeBtn} onClick={onClose}>✕</button>
@@ -219,13 +219,14 @@ export function NewGameModal({ onStartLocal, onClose }: NewGameModalProps) {
                           onClick={() => handleJoinFromBrowse(room.roomId)}
                           disabled={!playerName.trim()}
                         >
+                          <div className={styles.roomItemPlayers}>
+                            {room.playerCount}/{room.maxPlayers}
+                          </div>
                           <div className={styles.roomItemInfo}>
                             <span className={styles.roomItemHost}>{room.hostName}의 방</span>
                             <span className={styles.roomItemCode}>{room.roomId}</span>
                           </div>
-                          <span className={styles.roomItemPlayers}>
-                            {room.playerCount}/{room.maxPlayers}
-                          </span>
+                          <div className={styles.roomItemJoin}>참가</div>
                         </button>
                       ))
                     )}
