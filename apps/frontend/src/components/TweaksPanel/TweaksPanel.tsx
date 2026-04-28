@@ -39,37 +39,37 @@ export function TweaksPanel({
       {open && (
         <div className={styles.panel}>
           <div className={styles.section}>
-            <div className={styles.label}>Theme</div>
+            <div className={styles.label}>테마</div>
             <div className={styles.options}>
-              {(['light', 'dark'] as Theme[]).map((t) => (
+              {([['light', '라이트'], ['dark', '다크']] as [Theme, string][]).map(([t, label]) => (
                 <button
                   key={t}
                   className={`${styles.option} ${theme === t ? styles.active : ''}`}
                   onClick={() => onThemeChange?.(t)}
                 >
-                  {t}
+                  {label}
                 </button>
               ))}
             </div>
           </div>
 
           <div className={styles.section}>
-            <div className={styles.label}>Tray Mood</div>
+            <div className={styles.label}>분위기</div>
             <div className={styles.options}>
-              {(['soft', 'warm', 'cool'] as Mood[]).map((m) => (
+              {([['soft', '소프트'], ['warm', '웜'], ['cool', '쿨']] as [Mood, string][]).map(([m, label]) => (
                 <button
                   key={m}
                   className={`${styles.option} ${mood === m ? styles.active : ''}`}
                   onClick={() => onMoodChange?.(m)}
                 >
-                  {m}
+                  {label}
                 </button>
               ))}
             </div>
           </div>
 
           <div className={styles.section}>
-            <div className={styles.label}>Players</div>
+            <div className={styles.label}>플레이어 수</div>
             <div className={styles.options}>
               {[1, 2, 3, 4].map((n) => (
                 <button
@@ -77,7 +77,7 @@ export function TweaksPanel({
                   className={`${styles.option} ${playerCount === n ? styles.active : ''}`}
                   onClick={() => onPlayerCountChange?.(n)}
                 >
-                  {n}
+                  {n}명
                 </button>
               ))}
             </div>
@@ -85,7 +85,7 @@ export function TweaksPanel({
 
           <div className={styles.section}>
             <label className={styles.toggleRow}>
-              <span className={styles.label}>Hints</span>
+              <span className={styles.label}>힌트</span>
               <button
                 className={`${styles.switch} ${showHints ? styles.switchOn : ''}`}
                 onClick={() => onShowHintsChange?.(!showHints)}

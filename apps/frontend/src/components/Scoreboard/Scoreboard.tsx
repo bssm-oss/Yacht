@@ -22,8 +22,8 @@ export function Scoreboard({ players, activeIdx, diceValues, rollsUsed, onPick, 
   return (
     <aside className={styles.scoresheet}>
       <div className={styles.header}>
-        <div className={styles.title}>Scoresheet</div>
-        <div className={styles.sub}>Tap a row to bank a roll</div>
+        <div className={styles.title}>점수표</div>
+        <div className={styles.sub}>줄을 눌러서 점수 등록</div>
       </div>
       <div className={styles.scroll}>
         <table className={styles.table}>
@@ -36,14 +36,14 @@ export function Scoreboard({ players, activeIdx, diceValues, rollsUsed, onPick, 
                   className={`${styles.playerH} ${i === activeIdx ? styles.isActive : ''}`}
                 >
                   <span className={styles.playerHName}>{p.name}</span>
-                  {i === activeIdx && !gameOver ? <span className={styles.playerHTag}>Turn</span> : null}
+                  {i === activeIdx && !gameOver ? <span className={styles.playerHTag}>진행 중</span> : null}
                 </th>
               ))}
             </tr>
           </thead>
           <tbody>
             <tr className={styles.sectionRow}>
-              <th colSpan={players.length + 1}>Upper</th>
+              <th colSpan={players.length + 1}>상단</th>
             </tr>
             {UPPER_CATEGORIES.map((cat) => (
               <Row
@@ -60,8 +60,8 @@ export function Scoreboard({ players, activeIdx, diceValues, rollsUsed, onPick, 
             <tr className={styles.bonusRow}>
               <td>
                 <div className={styles.cat}>
-                  <div className={styles.catLabel}>Bonus</div>
-                  <div className={styles.catHelp}>+35 if upper ≥ 63</div>
+                  <div className={styles.catLabel}>보너스</div>
+                  <div className={styles.catHelp}>상단 합계 63 이상 시 +35</div>
                 </div>
               </td>
               {players.map((p, i) => {
@@ -84,7 +84,7 @@ export function Scoreboard({ players, activeIdx, diceValues, rollsUsed, onPick, 
               })}
             </tr>
             <tr className={styles.sectionRow}>
-              <th colSpan={players.length + 1}>Lower</th>
+              <th colSpan={players.length + 1}>하단</th>
             </tr>
             {LOWER_CATEGORIES.map((cat) => (
               <Row
@@ -102,7 +102,7 @@ export function Scoreboard({ players, activeIdx, diceValues, rollsUsed, onPick, 
           <tfoot>
             <tr className={styles.totalRow}>
               <td>
-                <div className={styles.totalLabel}>Total</div>
+                <div className={styles.totalLabel}>합계</div>
               </td>
               {totals.map((t, i) => (
                 <td
@@ -131,18 +131,18 @@ interface RowProps {
 }
 
 const CATEGORY_LABELS: Record<keyof Scorecard, { label: string; help: string }> = {
-  ones: { label: 'Ones', help: 'Sum of all 1s' },
-  twos: { label: 'Twos', help: 'Sum of all 2s' },
-  threes: { label: 'Threes', help: 'Sum of all 3s' },
-  fours: { label: 'Fours', help: 'Sum of all 4s' },
-  fives: { label: 'Fives', help: 'Sum of all 5s' },
-  sixes: { label: 'Sixes', help: 'Sum of all 6s' },
-  choice: { label: 'Choice', help: 'Sum of all dice' },
-  fourkind: { label: 'Four of a Kind', help: 'If ≥4 same, sum of those 4' },
-  fullhouse: { label: 'Full House', help: 'Three + two — sum of all dice' },
-  sstraight: { label: 'Small Straight', help: '4 in a row → 15' },
-  lstraight: { label: 'Large Straight', help: '5 in a row → 30' },
-  yacht: { label: 'Yacht', help: 'All 5 the same → 50' },
+  ones: { label: '1', help: '1이 나온 주사위 합' },
+  twos: { label: '2', help: '2가 나온 주사위 합' },
+  threes: { label: '3', help: '3이 나온 주사위 합' },
+  fours: { label: '4', help: '4가 나온 주사위 합' },
+  fives: { label: '5', help: '5가 나온 주사위 합' },
+  sixes: { label: '6', help: '6이 나온 주사위 합' },
+  choice: { label: '초이스', help: '전체 주사위 합' },
+  fourkind: { label: '포 카인드', help: '같은 눈 4개 이상 → 4개 합' },
+  fullhouse: { label: '풀하우스', help: '3+2 조합 → 전체 합' },
+  sstraight: { label: '스몰 스트레이트', help: '연속 4개 → 15점' },
+  lstraight: { label: '라지 스트레이트', help: '연속 5개 → 30점' },
+  yacht: { label: '야추', help: '전부 같은 눈 → 50점' },
 };
 
 function Row({ catId, players, activeIdx, preview, rollsUsed, onPick, gameOver }: RowProps) {

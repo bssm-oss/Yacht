@@ -18,17 +18,17 @@ export function GameOver({ players, winnerId, onPlayAgain }: GameOverProps) {
   return (
     <div className={styles.overlay}>
       <div className={styles.card}>
-        <div className={styles.eyebrow}>Game Over</div>
+        <div className={styles.eyebrow}>게임 종료</div>
         <div className={styles.winner}>
           {winner ? (
             <>
               <div className={styles.winnerName}>{winner.name}</div>
               <div className={styles.winnerScore}>
-                {computeTotals(winner.card).grand} points
+                {computeTotals(winner.card).grand}점
               </div>
             </>
           ) : (
-            <div className={styles.winnerName}>Game Over</div>
+            <div className={styles.winnerName}>게임 종료</div>
           )}
         </div>
 
@@ -43,7 +43,7 @@ export function GameOver({ players, winnerId, onPlayAgain }: GameOverProps) {
         </div>
 
         <button className={styles.playAgainBtn} onClick={onPlayAgain}>
-          Play again
+          다시 하기
         </button>
       </div>
     </div>

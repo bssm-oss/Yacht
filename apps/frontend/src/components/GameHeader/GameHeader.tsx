@@ -18,7 +18,7 @@ export function GameHeader({ playerName, onPlayerNameChange, rollsUsed, onNewGam
             <rect x="3" y="13" width="8" height="8" rx="2" fill="currentColor" opacity="0.6" />
             <rect x="13" y="13" width="8" height="8" rx="2" fill="currentColor" opacity="0.3" />
           </svg>
-          <span className={styles.title}>Yacht</span>
+          <span className={styles.title}>야추</span>
         </div>
       </div>
 
@@ -28,7 +28,7 @@ export function GameHeader({ playerName, onPlayerNameChange, rollsUsed, onNewGam
           className={styles.playerInput}
           value={playerName}
           onChange={(e) => onPlayerNameChange?.(e.target.value)}
-          placeholder="Player name"
+          placeholder="플레이어 이름"
         />
         <div className={styles.pips}>
           {[0, 1, 2].map((i) => (
@@ -39,7 +39,7 @@ export function GameHeader({ playerName, onPlayerNameChange, rollsUsed, onNewGam
 
       <div className={styles.right}>
         <button className={styles.newGameBtn} onClick={onNewGame}>
-          New game
+          새 게임
         </button>
       </div>
     </header>

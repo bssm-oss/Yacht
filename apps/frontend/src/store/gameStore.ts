@@ -40,7 +40,7 @@ interface GameStore {
 
 function createInitialState(playerCount: number): GameState {
   const players = Array.from({ length: playerCount }, (_, i) =>
-    makePlayer(`p${i}`, `Player ${i + 1}`)
+    makePlayer(`p${i}`, `플레이어 ${i + 1}`)
   );
   return {
     roomId: 'local',

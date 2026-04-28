@@ -284,9 +284,9 @@ export function Dice3D({ values, held, onRollComplete, onToggleHold, rollSeed = 
           className={`${styles.diceHitbox} ${held[i] ? styles.diceHeld : ''} ${!isRolling ? styles.diceClickable : ''}`}
           style={{ left: pos.x, top: pos.y }}
           onClick={() => !isRolling && onToggleHold?.(i)}
-          aria-label={`Die ${i + 1}: ${values[i]}${held[i] ? ' (held)' : ''}`}
+          aria-label={`주사위 ${i + 1}: ${values[i]}${held[i] ? ' (고정)' : ''}`}
         >
-          {held[i] && <span className={styles.heldBadge}>HELD</span>}
+          {held[i] && <span className={styles.heldBadge}>고정</span>}
         </button>
       ))}
     </div>
