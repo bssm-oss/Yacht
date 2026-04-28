@@ -18,7 +18,7 @@ export function GameHeader({ playerName, onPlayerNameChange, rollsUsed, onNewGam
             <rect x="3" y="13" width="8" height="8" rx="2" fill="currentColor" opacity="0.6" />
             <rect x="13" y="13" width="8" height="8" rx="2" fill="currentColor" opacity="0.3" />
           </svg>
-          <span className={styles.title}>야추</span>
+          <span className={styles.title}>BSSM-Yacht</span>
         </div>
       </div>
 
