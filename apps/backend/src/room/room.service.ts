@@ -22,6 +22,7 @@ function makePlayer(id: string, name: string): Player {
 export class RoomService {
   private rooms = new Map<string, GameState>();
   private spectators = new Map<string, Set<string>>();
+  private pendingRemovals = new Map<string, { timer: ReturnType<typeof setTimeout>; roomId: string }>();
 
   createRoom(playerName: string, socketId: string, maxPlayers: number = 4, isPublic: boolean = true): GameState {
     const roomId = generateRoomId();
@@ -94,6 +95,56 @@ export class RoomService {
     for (const [, spectatorSet] of this.spectators) {
       spectatorSet.delete(socketId);
     }
+  }
+
+  disconnectPlayer(
+    socketId: string,
+    onExpire: (roomId: string, state: GameState | null) => void,
+  ): { roomId: string; state: GameState } | null {
+    for (const [roomId, state] of this.rooms) {
+      const player = state.players.find((p) => p.id === socketId);
+      if (!player) continue;
+
+      const existing = this.pendingRemovals.get(socketId);
+      if (existing) clearTimeout(existing.timer);
+
+      player.connected = false;
+
+      const timer = setTimeout(() => {
+        this.pendingRemovals.delete(socketId);
+        const result = this.removePlayer(socketId);
+        onExpire(roomId, result?.state ?? null);
+      }, 30_000);
+
+      this.pendingRemovals.set(socketId, { timer, roomId });
+      return { roomId, state };
+    }
+    return null;
+  }
+
+  rejoinRoom(
+    roomId: string,
+    playerName: string,
+    newSocketId: string,
+  ): { roomId: string; state: GameState; oldSocketId: string } | null {
+    const state = this.rooms.get(roomId);
+    if (!state) return null;
+
+    const player = state.players.find((p) => p.name === playerName && !p.connected);
+    if (!player) return null;
+
+    const oldSocketId = player.id;
+    const pending = this.pendingRemovals.get(oldSocketId);
+    if (pending) {
+      clearTimeout(pending.timer);
+      this.pendingRemovals.delete(oldSocketId);
+    }
+
+    player.id = newSocketId;
+    player.connected = true;
+    if (state.hostId === oldSocketId) state.hostId = newSocketId;
+
+    return { roomId, state, oldSocketId };
   }
 
   getRoom(roomId: string): GameState | undefined {

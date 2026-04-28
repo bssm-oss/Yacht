@@ -113,15 +113,8 @@ function App() {
     if (emptyCats.length === 0) return;
 
     if (gameState.rollsUsed === 0) {
+      // 굴리기 전이면 강제 굴리기만 - 타이머가 rollsUsed 변경으로 리셋되면 다음 만료 시 자동 선택
       handleRoll();
-      setTimeout(() => {
-        const nonZero = emptyCats.filter((k) => scoreCategory(k, gameState.dice) > 0);
-        const pool = nonZero.length > 0 ? nonZero : emptyCats;
-        const best = pool.reduce((b, k) =>
-          scoreCategory(k, gameState.dice) >= scoreCategory(b, gameState.dice) ? k : b
-        );
-        handlePickCategory(best);
-      }, 300);
     } else {
       const nonZero = emptyCats.filter((k) => scoreCategory(k, gameState.dice) > 0);
       const pool = nonZero.length > 0 ? nonZero : emptyCats;
@@ -183,6 +176,7 @@ function App() {
                     className={styles.timerProgress}
                     strokeDasharray={`${(timeLeft / TURN_LIMIT) * 100} 100`}
                     strokeDashoffset="25"
+                    style={{ transition: timeLeft === TURN_LIMIT ? 'stroke 0.3s ease' : undefined }}
                   />
                 </svg>
                 <span className={styles.timerNum}>{timeLeft}</span>
@@ -295,6 +289,40 @@ function App() {
               padding: '0.3rem 0.8rem',
               cursor: 'pointer',
               fontWeight: 600,
+            }}
+          >
+            나가기
+          </button>
+        </div>
+      )}
+
+      {multiplayer.connectionState === 'reconnecting' && (
+        <div style={{
+          position: 'fixed', inset: 0,
+          background: 'rgba(0,0,0,0.65)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 3000,
+          flexDirection: 'column', gap: '16px',
+        }}>
+          <div style={{
+            width: 40, height: 40,
+            border: '3px solid rgba(255,255,255,0.25)',
+            borderTopColor: '#fff',
+            borderRadius: '50%',
+            animation: 'spin 0.8s linear infinite',
+          }} />
+          <div style={{ color: '#fff', fontFamily: 'var(--font-text)', fontSize: '16px', fontWeight: 600 }}>
+            재접속 중...
+          </div>
+          <div style={{ color: 'rgba(255,255,255,0.55)', fontFamily: 'var(--font-text)', fontSize: '13px' }}>
+            30초 내로 재접속되지 않으면 게임에서 제외됩니다
+          </div>
+          <button
+            onClick={handleLeave}
+            style={{
+              background: 'rgba(255,255,255,0.15)', color: '#fff', border: '1px solid rgba(255,255,255,0.3)',
+              borderRadius: '8px', padding: '8px 20px', cursor: 'pointer', marginTop: 8,
+              fontFamily: 'var(--font-text)', fontSize: '13px', fontWeight: 600,
             }}
           >
             나가기

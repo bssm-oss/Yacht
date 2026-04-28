@@ -75,10 +75,27 @@ export class RoomGateway {
 
   handleDisconnect(client: Socket) {
     this.roomService.removeSpectator(client.id);
-    const result = this.roomService.removePlayer(client.id);
+    const result = this.roomService.disconnectPlayer(client.id, (roomId, state) => {
+      if (state) this.server.to(roomId).emit('game:state', state);
+    });
     if (result) {
       this.server.to(result.roomId).emit('game:state', result.state);
     }
+  }
+
+  @SubscribeMessage('room:rejoin')
+  handleRejoin(
+    @MessageBody() data: { roomId: string; playerName: string },
+    @ConnectedSocket() client: Socket
+  ) {
+    const result = this.roomService.rejoinRoom(data.roomId, data.playerName, client.id);
+    if (!result) {
+      client.emit('room:rejoin_failed');
+      return;
+    }
+    client.join(result.roomId);
+    client.emit('room:rejoined', { gameState: result.state });
+    this.server.to(result.roomId).emit('game:state', result.state);
   }
 
   @SubscribeMessage('room:list')

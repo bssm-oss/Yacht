@@ -14,7 +14,14 @@
       "Bash(git remote *)",
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(node *)",
+      "Bash(git rm *)",
+      "Bash(pnpm install *)",
+      "Bash(pnpm --filter frontend exec vite build)",
+      "Bash(pnpm --filter backend build)",
+      "Bash(pnpm *)",
+      "Bash(git commit -m 'fix: 야추 → 요트로 명칭 수정 *)"
     ]
   }
 }

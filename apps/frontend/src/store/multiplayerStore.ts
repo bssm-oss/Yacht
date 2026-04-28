@@ -3,7 +3,7 @@ import { io, Socket } from 'socket.io-client';
 import type { GameState, Scorecard } from '@shared/types/game';
 import type { RoomInfo } from '@shared/types/ws';
 
-export type ConnectionState = 'disconnected' | 'connecting' | 'connected';
+export type ConnectionState = 'disconnected' | 'connecting' | 'connected' | 'reconnecting';
 
 export interface ChatMessage {
   playerId: string;
@@ -16,6 +16,7 @@ export interface MultiplayerStore {
   socket: Socket | null;
   roomId: string | null;
   playerId: string | null;
+  myName: string | null;
   connectionState: ConnectionState;
   gameState: GameState | null;
   error: string | null;
@@ -41,6 +42,7 @@ export const useMultiplayerStore = create<MultiplayerStore>((set, get) => ({
   socket: null,
   roomId: null,
   playerId: null,
+  myName: null,
   connectionState: 'disconnected',
   gameState: null,
   error: null,
@@ -61,6 +63,7 @@ export const useMultiplayerStore = create<MultiplayerStore>((set, get) => ({
       set({
         socket,
         roomId: data.roomId,
+        myName: playerName,
         gameState: data.gameState,
         connectionState: 'connected',
         isSpectator: false,
@@ -90,8 +93,28 @@ export const useMultiplayerStore = create<MultiplayerStore>((set, get) => ({
       set((s) => ({ chatMessages: [...s.chatMessages.slice(-99), msg] }));
     });
 
-    socket.on('disconnect', () => {
-      set({ connectionState: 'disconnected', socket: null, roomId: null, isSpectator: false, chatMessages: [] });
+    socket.on('room:rejoined', (data: { gameState: GameState }) => {
+      set({ gameState: data.gameState, connectionState: 'connected', playerId: socket.id });
+    });
+
+    socket.on('room:rejoin_failed', () => {
+      set({ connectionState: 'disconnected', socket: null, roomId: null, gameState: null, isSpectator: false, chatMessages: [], myName: null });
+    });
+
+    socket.on('disconnect', (reason) => {
+      if (reason === 'io client disconnect' || reason === 'io server disconnect') {
+        set({ connectionState: 'disconnected', socket: null, roomId: null, isSpectator: false, chatMessages: [], myName: null });
+      } else {
+        set({ connectionState: 'reconnecting' });
+      }
+    });
+
+    socket.io.on('reconnect', () => {
+      const { roomId: currentRoomId, myName: currentName, isSpectator } = get();
+      if (currentRoomId && currentName && !isSpectator) {
+        set({ playerId: socket.id });
+        socket.emit('room:rejoin', { roomId: currentRoomId, playerName: currentName });
+      }
     });
   },
 
@@ -108,6 +131,7 @@ export const useMultiplayerStore = create<MultiplayerStore>((set, get) => ({
       set({
         socket,
         roomId: data.gameState.roomId,
+        myName: playerName,
         gameState: data.gameState,
         connectionState: 'connected',
         isSpectator: false,
@@ -137,8 +161,28 @@ export const useMultiplayerStore = create<MultiplayerStore>((set, get) => ({
       set((s) => ({ chatMessages: [...s.chatMessages.slice(-99), msg] }));
     });
 
-    socket.on('disconnect', () => {
-      set({ connectionState: 'disconnected', socket: null, roomId: null, isSpectator: false, chatMessages: [] });
+    socket.on('room:rejoined', (data: { gameState: GameState }) => {
+      set({ gameState: data.gameState, connectionState: 'connected', playerId: socket.id });
+    });
+
+    socket.on('room:rejoin_failed', () => {
+      set({ connectionState: 'disconnected', socket: null, roomId: null, gameState: null, isSpectator: false, chatMessages: [], myName: null });
+    });
+
+    socket.on('disconnect', (reason) => {
+      if (reason === 'io client disconnect' || reason === 'io server disconnect') {
+        set({ connectionState: 'disconnected', socket: null, roomId: null, isSpectator: false, chatMessages: [], myName: null });
+      } else {
+        set({ connectionState: 'reconnecting' });
+      }
+    });
+
+    socket.io.on('reconnect', () => {
+      const { roomId: currentRoomId, myName: currentName, isSpectator } = get();
+      if (currentRoomId && currentName && !isSpectator) {
+        set({ playerId: socket.id });
+        socket.emit('room:rejoin', { roomId: currentRoomId, playerName: currentName });
+      }
     });
   },
 
@@ -151,6 +195,7 @@ export const useMultiplayerStore = create<MultiplayerStore>((set, get) => ({
       socket: null,
       roomId: null,
       playerId: null,
+      myName: null,
       connectionState: 'disconnected',
       gameState: null,
       error: null,
