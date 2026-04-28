@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useGameStore } from './store/gameStore';
 import { useMultiplayerStore } from './store/multiplayerStore';
 import { GameHeader } from './components/GameHeader/GameHeader';
@@ -17,6 +17,10 @@ function App() {
   const [showNewGame, setShowNewGame] = useState(false);
   const [onlineRollSeed, setOnlineRollSeed] = useState(0);
   const prevOnlineRollsUsedRef = useRef(-1);
+
+  const [turnAnnounce, setTurnAnnounce] = useState<{ name: string; hiding: boolean } | null>(null);
+  const prevActiveIndexRef = useRef(-1);
+  const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const isOnline = multiplayer.connectionState === 'connected';
 
@@ -39,6 +43,32 @@ function App() {
   }, [isOnline]);
 
   const activePlayer = gameState.players[gameState.activePlayerIndex];
+
+  const dismissTurnAnnounce = useCallback(() => {
+    if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+    setTurnAnnounce((prev) => prev ? { ...prev, hiding: true } : null);
+    hideTimerRef.current = setTimeout(() => setTurnAnnounce(null), 300);
+  }, []);
+
+  // 턴이 바뀌면 알림 표시 (게임 시작 첫 턴 제외)
+  useEffect(() => {
+    const idx = gameState.activePlayerIndex;
+    if (gameState.phase !== 'playing') {
+      prevActiveIndexRef.current = idx;
+      return;
+    }
+    if (prevActiveIndexRef.current === -1) {
+      prevActiveIndexRef.current = idx;
+      return;
+    }
+    if (prevActiveIndexRef.current !== idx) {
+      prevActiveIndexRef.current = idx;
+      const name = gameState.players[idx]?.name ?? '플레이어';
+      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+      setTurnAnnounce({ name, hiding: false });
+      hideTimerRef.current = setTimeout(() => dismissTurnAnnounce(), 2200);
+    }
+  }, [gameState.activePlayerIndex, gameState.phase]);
 
   const handleRoll = isOnline ? multiplayer.roll : local.roll;
   const handleToggleHold = isOnline ? multiplayer.hold : local.toggleHold;
@@ -127,6 +157,18 @@ function App() {
           onStartLocal={handleStartLocal}
           onClose={() => setShowNewGame(false)}
         />
+      )}
+
+      {turnAnnounce && (
+        <div
+          className={`${styles.turnOverlay} ${turnAnnounce.hiding ? styles.hiding : ''}`}
+          onClick={dismissTurnAnnounce}
+        >
+          <div className={styles.turnCard}>
+            <h2>차례</h2>
+            <p>{turnAnnounce.name}</p>
+          </div>
+        </div>
       )}
     </div>
   );
