@@ -21,8 +21,7 @@
     "react-dom": "^19.1.0",
     "three": "^0.170.0",
     "zustand": "^5.0.3",
-    "socket.io-client": "^4.8.1",
-    "@dice/shared": "workspace:*"
+    "socket.io-client": "^4.8.1"
   },
   "devDependencies": {
     "@types/react": "^19.1.0",
