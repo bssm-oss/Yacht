@@ -9,7 +9,7 @@ import { Server, Socket } from 'socket.io';
 import { GameService } from './game.service';
 import type { Scorecard } from '@shared/types/game';
 
-@WebSocketGateway({ cors: { origin: '*' }, namespace: '/' })
+@WebSocketGateway({ cors: { origin: 'https://web-yacht-front-moi1ut3j59ddc723.sel3.cloudtype.app', credentials: true }, namespace: '/' })
 export class GameGateway {
   @WebSocketServer()
   server: Server;
