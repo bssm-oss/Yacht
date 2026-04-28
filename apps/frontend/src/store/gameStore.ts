@@ -51,6 +51,9 @@ function createInitialState(playerCount: number): GameState {
     rollsUsed: 0,
     phase: 'playing',
     winnerId: null,
+    maxPlayers: 4,
+    isPublic: true,
+    hostName: '플레이어 1',
   };
 }
 

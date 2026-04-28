@@ -19,7 +19,7 @@ export function MultiplayerLobby({ isOpen, onClose }: MultiplayerLobbyProps) {
 
   const handleCreate = async () => {
     if (!playerName.trim()) return;
-    await createRoom(playerName.trim());
+    await createRoom(playerName.trim(), 4, true);
   };
 
   const handleJoin = async () => {

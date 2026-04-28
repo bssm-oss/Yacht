@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import type { GameState, Player } from '@shared/types/game';
+import type { RoomInfo } from '@shared/types/ws';
 import { makeEmptyScorecard } from '@shared/scoring';
 
 function generateRoomId(): string {
@@ -20,7 +21,7 @@ function makePlayer(id: string, name: string): Player {
 export class RoomService {
   private rooms = new Map<string, GameState>();
 
-  createRoom(playerName: string, socketId: string): GameState {
+  createRoom(playerName: string, socketId: string, maxPlayers: number = 4, isPublic: boolean = true): GameState {
     const roomId = generateRoomId();
     const player = makePlayer(socketId, playerName);
     const state: GameState = {
@@ -32,6 +33,9 @@ export class RoomService {
       rollsUsed: 0,
       phase: 'waiting',
       winnerId: null,
+      maxPlayers,
+      isPublic,
+      hostName: playerName,
     };
     this.rooms.set(roomId, state);
     return state;
@@ -40,7 +44,7 @@ export class RoomService {
   joinRoom(roomId: string, playerName: string, socketId: string): GameState | null {
     const state = this.rooms.get(roomId);
     if (!state) return null;
-    if (state.players.length >= 4) return null;
+    if (state.players.length >= state.maxPlayers) return null;
 
     const player = makePlayer(socketId, playerName);
     state.players.push(player);
@@ -82,5 +86,21 @@ export class RoomService {
 
   updateRoom(roomId: string, state: GameState): void {
     this.rooms.set(roomId, state);
+  }
+
+  getPublicRooms(): RoomInfo[] {
+    const rooms: RoomInfo[] = [];
+    for (const [, state] of this.rooms) {
+      if (state.isPublic && state.phase === 'waiting') {
+        rooms.push({
+          roomId: state.roomId,
+          hostName: state.hostName,
+          playerCount: state.players.length,
+          maxPlayers: state.maxPlayers,
+          isPublic: state.isPublic,
+        });
+      }
+    }
+    return rooms;
   }
 }

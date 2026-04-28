@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMultiplayerStore } from '../../store/multiplayerStore';
+import type { RoomInfo } from '@shared/types/ws';
 import styles from './NewGameModal.module.css';
 
 interface NewGameModalProps {
@@ -10,24 +11,37 @@ interface NewGameModalProps {
 export function NewGameModal({ onStartLocal, onClose }: NewGameModalProps) {
   const [tab, setTab] = useState<'local' | 'online'>('local');
   const [playerCount, setPlayerCount] = useState(1);
-  const [onlineTab, setOnlineTab] = useState<'create' | 'join'>('create');
+  const [onlineTab, setOnlineTab] = useState<'create' | 'join' | 'browse'>('create');
   const [playerName, setPlayerName] = useState('');
   const [roomCode, setRoomCode] = useState('');
   const [copied, setCopied] = useState(false);
+  const [maxPlayers, setMaxPlayers] = useState(4);
+  const [isPublic, setIsPublic] = useState(true);
 
-  const { createRoom, joinRoom, disconnect, roomId, connectionState, error } =
+  const { createRoom, joinRoom, disconnect, roomId, connectionState, error, fetchPublicRooms, publicRooms } =
     useMultiplayerStore();
 
   const isConnected = connectionState === 'connected' && roomId;
 
+  useEffect(() => {
+    if (onlineTab === 'browse') {
+      fetchPublicRooms();
+    }
+  }, [onlineTab, fetchPublicRooms]);
+
   const handleCreateRoom = async () => {
     if (!playerName.trim()) return;
-    await createRoom(playerName.trim());
+    await createRoom(playerName.trim(), maxPlayers, isPublic);
   };
 
   const handleJoinRoom = async () => {
     if (!playerName.trim() || roomCode.trim().length < 4) return;
     await joinRoom(roomCode.trim().toUpperCase(), playerName.trim());
+  };
+
+  const handleJoinFromBrowse = async (targetRoomId: string) => {
+    if (!playerName.trim()) return;
+    await joinRoom(targetRoomId, playerName.trim());
   };
 
   const handleCopyCode = () => {
@@ -118,7 +132,13 @@ export function NewGameModal({ onStartLocal, onClose }: NewGameModalProps) {
                     className={`${styles.onlineTab} ${onlineTab === 'join' ? styles.onlineTabActive : ''}`}
                     onClick={() => setOnlineTab('join')}
                   >
-                    방 참가
+                    코드 참가
+                  </button>
+                  <button
+                    className={`${styles.onlineTab} ${onlineTab === 'browse' ? styles.onlineTabActive : ''}`}
+                    onClick={() => setOnlineTab('browse')}
+                  >
+                    방 찾기
                   </button>
                 </div>
 
@@ -131,9 +151,46 @@ export function NewGameModal({ onStartLocal, onClose }: NewGameModalProps) {
                     onChange={(e) => setPlayerName(e.target.value)}
                     placeholder="이름을 입력하세요"
                     maxLength={20}
-                    onKeyDown={(e) => e.key === 'Enter' && (onlineTab === 'create' ? handleCreateRoom() : handleJoinRoom())}
+                    onKeyDown={(e) => e.key === 'Enter' && (onlineTab === 'create' ? handleCreateRoom() : onlineTab === 'join' ? handleJoinRoom() : undefined)}
                   />
                 </div>
+
+                {onlineTab === 'create' && (
+                  <>
+                    <div className={styles.field}>
+                      <div className={styles.label}>최대 인원</div>
+                      <div className={styles.options}>
+                        {[2, 3, 4].map((n) => (
+                          <button
+                            key={n}
+                            className={`${styles.option} ${maxPlayers === n ? styles.optionActive : ''}`}
+                            onClick={() => setMaxPlayers(n)}
+                          >
+                            {n}명
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className={styles.field}>
+                      <div className={styles.label}>방 공개</div>
+                      <div className={styles.options}>
+                        <button
+                          className={`${styles.option} ${isPublic ? styles.optionActive : ''}`}
+                          onClick={() => setIsPublic(true)}
+                        >
+                          공개방
+                        </button>
+                        <button
+                          className={`${styles.option} ${!isPublic ? styles.optionActive : ''}`}
+                          onClick={() => setIsPublic(false)}
+                        >
+                          비공개방
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
 
                 {onlineTab === 'join' && (
                   <div className={styles.field}>
@@ -150,11 +207,36 @@ export function NewGameModal({ onStartLocal, onClose }: NewGameModalProps) {
                   </div>
                 )}
 
+                {onlineTab === 'browse' && (
+                  <div className={styles.roomList}>
+                    {publicRooms.length === 0 ? (
+                      <div className={styles.emptyRooms}>참가 가능한 공개방이 없습니다</div>
+                    ) : (
+                      publicRooms.map((room: RoomInfo) => (
+                        <button
+                          key={room.roomId}
+                          className={styles.roomItem}
+                          onClick={() => handleJoinFromBrowse(room.roomId)}
+                          disabled={!playerName.trim()}
+                        >
+                          <div className={styles.roomItemInfo}>
+                            <span className={styles.roomItemHost}>{room.hostName}의 방</span>
+                            <span className={styles.roomItemCode}>{room.roomId}</span>
+                          </div>
+                          <span className={styles.roomItemPlayers}>
+                            {room.playerCount}/{room.maxPlayers}
+                          </span>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                )}
+
                 {error && <div className={styles.errorMsg}>{error}</div>}
 
                 {connectionState === 'connecting' ? (
                   <div className={styles.connecting}>연결 중…</div>
-                ) : (
+                ) : onlineTab !== 'browse' ? (
                   <button
                     className={styles.primaryBtn}
                     onClick={onlineTab === 'create' ? handleCreateRoom : handleJoinRoom}
@@ -166,7 +248,7 @@ export function NewGameModal({ onStartLocal, onClose }: NewGameModalProps) {
                   >
                     {onlineTab === 'create' ? '방 만들기' : '참가하기'}
                   </button>
-                )}
+                ) : null}
               </>
             )}
           </div>

@@ -64,4 +64,7 @@ export interface GameState {
   rollsUsed: number;
   phase: 'waiting' | 'playing' | 'ended';
   winnerId: string | null;
+  maxPlayers: number;
+  isPublic: boolean;
+  hostName: string;
 }

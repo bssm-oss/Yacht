@@ -26,6 +26,8 @@
   bottom: 44px;
   right: 0;
   width: 200px;
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
   background: var(--panel-bg);
   border: 1px solid var(--hairline);
   border-radius: var(--radius-md);

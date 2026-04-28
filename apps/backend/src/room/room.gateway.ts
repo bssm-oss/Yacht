@@ -17,10 +17,12 @@ export class RoomGateway {
 
   @SubscribeMessage('room:create')
   handleCreate(
-    @MessageBody() data: { playerName: string },
+    @MessageBody() data: { playerName: string; maxPlayers?: number; isPublic?: boolean },
     @ConnectedSocket() client: Socket
   ) {
-    const state = this.roomService.createRoom(data.playerName, client.id);
+    const maxPlayers = data.maxPlayers ?? 4;
+    const isPublic = data.isPublic ?? true;
+    const state = this.roomService.createRoom(data.playerName, client.id, maxPlayers, isPublic);
     client.join(state.roomId);
     client.emit('room:created', { roomId: state.roomId, gameState: state });
   }
@@ -45,5 +47,11 @@ export class RoomGateway {
     if (result) {
       this.server.to(result.roomId).emit('game:state', result.state);
     }
+  }
+
+  @SubscribeMessage('room:list')
+  handleList(@ConnectedSocket() client: Socket) {
+    const rooms = this.roomService.getPublicRooms();
+    client.emit('room:list', { rooms });
   }
 }
