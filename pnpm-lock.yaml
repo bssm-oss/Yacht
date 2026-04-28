@@ -38,6 +38,9 @@ importers:
       socket.io:
         specifier: ^4.8.1
         version: 4.8.3
+      tsc-alias:
+        specifier: ^1.8.16
+        version: 1.8.16
       turbo:
         specifier: ^2.4.4
         version: 2.9.6
