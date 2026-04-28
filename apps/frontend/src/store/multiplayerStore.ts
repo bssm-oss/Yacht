@@ -13,6 +13,7 @@ export interface MultiplayerStore {
   gameState: GameState | null;
   error: string | null;
   publicRooms: RoomInfo[];
+  isSpectator: boolean;
 
   createRoom: (playerName: string, maxPlayers: number, isPublic: boolean) => Promise<void>;
   joinRoom: (roomId: string, playerName: string) => Promise<void>;
@@ -21,6 +22,8 @@ export interface MultiplayerStore {
   hold: (index: number) => void;
   pickCategory: (catId: keyof Scorecard) => void;
   fetchPublicRooms: () => void;
+  setReady: (ready: boolean) => void;
+  startGame: () => void;
 }
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3001';
@@ -33,6 +36,7 @@ export const useMultiplayerStore = create<MultiplayerStore>((set, get) => ({
   gameState: null,
   error: null,
   publicRooms: [],
+  isSpectator: false,
 
   createRoom: async (playerName: string, maxPlayers: number, isPublic: boolean) => {
     set({ connectionState: 'connecting', error: null });
@@ -49,6 +53,17 @@ export const useMultiplayerStore = create<MultiplayerStore>((set, get) => ({
         roomId: data.roomId,
         gameState: data.gameState,
         connectionState: 'connected',
+        isSpectator: false,
+      });
+    });
+
+    socket.on('room:spectating', (data: { gameState: GameState }) => {
+      set({
+        socket,
+        roomId: data.gameState.roomId,
+        gameState: data.gameState,
+        connectionState: 'connected',
+        isSpectator: true,
       });
     });
 
@@ -62,7 +77,7 @@ export const useMultiplayerStore = create<MultiplayerStore>((set, get) => ({
     });
 
     socket.on('disconnect', () => {
-      set({ connectionState: 'disconnected', socket: null, roomId: null });
+      set({ connectionState: 'disconnected', socket: null, roomId: null, isSpectator: false });
     });
   },
 
@@ -81,6 +96,17 @@ export const useMultiplayerStore = create<MultiplayerStore>((set, get) => ({
         roomId: data.gameState.roomId,
         gameState: data.gameState,
         connectionState: 'connected',
+        isSpectator: false,
+      });
+    });
+
+    socket.on('room:spectating', (data: { gameState: GameState }) => {
+      set({
+        socket,
+        roomId: data.gameState.roomId,
+        gameState: data.gameState,
+        connectionState: 'connected',
+        isSpectator: true,
       });
     });
 
@@ -94,7 +120,7 @@ export const useMultiplayerStore = create<MultiplayerStore>((set, get) => ({
     });
 
     socket.on('disconnect', () => {
-      set({ connectionState: 'disconnected', socket: null, roomId: null });
+      set({ connectionState: 'disconnected', socket: null, roomId: null, isSpectator: false });
     });
   },
 
@@ -110,6 +136,7 @@ export const useMultiplayerStore = create<MultiplayerStore>((set, get) => ({
       connectionState: 'disconnected',
       gameState: null,
       error: null,
+      isSpectator: false,
     });
   },
 
@@ -151,5 +178,19 @@ export const useMultiplayerStore = create<MultiplayerStore>((set, get) => ({
     tempSocket.on('room:error', () => {
       tempSocket.disconnect();
     });
+  },
+
+  setReady: (ready: boolean) => {
+    const { socket } = get();
+    if (socket) {
+      socket.emit('room:ready', { ready });
+    }
+  },
+
+  startGame: () => {
+    const { socket } = get();
+    if (socket) {
+      socket.emit('room:start');
+    }
   },
 }));

@@ -53,6 +53,7 @@ export interface Player {
   name: string;
   card: Scorecard;
   connected: boolean;
+  ready: boolean;
 }
 
 export interface GameState {
@@ -67,4 +68,5 @@ export interface GameState {
   maxPlayers: number;
   isPublic: boolean;
   hostName: string;
+  hostId: string;
 }

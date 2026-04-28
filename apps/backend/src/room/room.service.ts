@@ -14,16 +14,19 @@ function makePlayer(id: string, name: string): Player {
     name,
     card: makeEmptyScorecard(),
     connected: true,
+    ready: false,
   };
 }
 
 @Injectable()
 export class RoomService {
   private rooms = new Map<string, GameState>();
+  private spectators = new Map<string, Set<string>>();
 
   createRoom(playerName: string, socketId: string, maxPlayers: number = 4, isPublic: boolean = true): GameState {
     const roomId = generateRoomId();
     const player = makePlayer(socketId, playerName);
+    player.ready = false;
     const state: GameState = {
       roomId,
       players: [player],
@@ -36,25 +39,61 @@ export class RoomService {
       maxPlayers,
       isPublic,
       hostName: playerName,
+      hostId: socketId,
     };
     this.rooms.set(roomId, state);
+    this.spectators.set(roomId, new Set());
     return state;
   }
 
-  joinRoom(roomId: string, playerName: string, socketId: string): GameState | null {
+  joinRoom(roomId: string, playerName: string, socketId: string): GameState | { spectating: true; state: GameState } | null {
     const state = this.rooms.get(roomId);
     if (!state) return null;
+
+    // If game is already in progress or ended, add as spectator
+    if (state.phase === 'playing' || state.phase === 'ended') {
+      const spectatorSet = this.spectators.get(roomId) ?? new Set<string>();
+      spectatorSet.add(socketId);
+      this.spectators.set(roomId, spectatorSet);
+      return { spectating: true, state };
+    }
+
     if (state.players.length >= state.maxPlayers) return null;
 
     const player = makePlayer(socketId, playerName);
+    player.ready = false;
     state.players.push(player);
 
-    // Start game when 2+ players
-    if (state.players.length >= 2 && state.phase === 'waiting') {
-      state.phase = 'playing';
-    }
-
     return state;
+  }
+
+  setReady(socketId: string, ready: boolean): { roomId: string; state: GameState } | null {
+    for (const [roomId, state] of this.rooms) {
+      const player = state.players.find((p) => p.id === socketId);
+      if (!player) continue;
+      player.ready = ready;
+      return { roomId, state };
+    }
+    return null;
+  }
+
+  startGame(socketId: string): { roomId: string; state: GameState } | null {
+    for (const [roomId, state] of this.rooms) {
+      if (state.hostId !== socketId) continue;
+      if (state.phase !== 'waiting') return null;
+      if (state.players.length < 2) return null;
+      if (!state.players.every((p) => p.ready)) return null;
+
+      state.phase = 'playing';
+      return { roomId, state };
+    }
+    return null;
+  }
+
+  removeSpectator(socketId: string): void {
+    for (const [, spectatorSet] of this.spectators) {
+      spectatorSet.delete(socketId);
+    }
   }
 
   getRoom(roomId: string): GameState | undefined {
@@ -72,14 +111,21 @@ export class RoomService {
       // Delete room if empty
       if (state.players.length === 0) {
         this.rooms.delete(roomId);
+        this.spectators.delete(roomId);
         return null;
       }
 
-      // 1명만 남으면 게임 종료
+      // 1명만 남으면 게임 종료 (playing 중일 때만)
       if (state.players.length === 1 && state.phase === 'playing') {
         state.phase = 'ended';
         state.winnerId = state.players[0].id;
         return { roomId, state };
+      }
+
+      // waiting 중 host가 나가면 다음 플레이어에게 host 이전
+      if (state.phase === 'waiting' && state.hostId === socketId && state.players.length > 0) {
+        state.hostId = state.players[0].id;
+        state.hostName = state.players[0].name;
       }
 
       // 나간 플레이어가 active였으면 해당 index로 턴 넘기기 (이미 splice됐으므로 범위 조정)

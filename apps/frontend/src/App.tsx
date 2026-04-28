@@ -7,6 +7,7 @@ import { Dice3D } from './components/Dice3D/Dice3D';
 import { GameOver } from './components/GameOver/GameOver';
 import { NewGameModal } from './components/NewGameModal/NewGameModal';
 import { TweaksPanel, type Theme, type Mood } from './components/TweaksPanel/TweaksPanel';
+import { WaitingRoom } from './components/WaitingRoom/WaitingRoom';
 import { CATEGORY_KEYS } from '@shared/types/game';
 import { scoreCategory } from '@shared/scoring';
 
@@ -29,6 +30,7 @@ function App() {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const isOnline = multiplayer.connectionState === 'connected';
+  const { isSpectator, setReady, startGame } = multiplayer;
 
   // Use online game state when connected, local otherwise
   const gameState = isOnline ? (multiplayer.gameState ?? local.gameState) : local.gameState;
@@ -228,6 +230,49 @@ function App() {
             <h2>차례</h2>
             <p>{turnAnnounce.name}</p>
           </div>
+        </div>
+      )}
+
+      {isOnline && gameState.phase === 'waiting' && (
+        <WaitingRoom
+          gameState={gameState}
+          playerId={multiplayer.playerId}
+          onReady={setReady}
+          onStart={startGame}
+          onLeave={handleLeave}
+        />
+      )}
+
+      {isOnline && isSpectator && gameState.phase !== 'waiting' && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          background: 'rgba(0,0,0,0.75)',
+          color: '#fff',
+          padding: '0.5rem 1rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          zIndex: 500,
+          fontSize: '0.9rem',
+        }}>
+          <span>👁 관전 중 — {multiplayer.roomId}</span>
+          <button
+            onClick={handleLeave}
+            style={{
+              background: 'rgba(255,255,255,0.15)',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '6px',
+              padding: '0.3rem 0.8rem',
+              cursor: 'pointer',
+              fontWeight: 600,
+            }}
+          >
+            나가기
+          </button>
         </div>
       )}
     </div>

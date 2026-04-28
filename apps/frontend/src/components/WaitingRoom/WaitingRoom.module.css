@@ -1,0 +1,184 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.card {
+  background: var(--bg-surface, #fff);
+  color: var(--text-primary, #111);
+  border-radius: 16px;
+  padding: 2rem;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.roomCodeSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.roomCodeLabel {
+  font-size: 0.8rem;
+  opacity: 0.6;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.roomCode {
+  font-family: monospace;
+  font-size: 2.5rem;
+  font-weight: 800;
+  letter-spacing: 0.3em;
+  background: none;
+  border: 2px dashed currentColor;
+  border-radius: 8px;
+  padding: 0.3rem 1rem;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.9;
+  transition: opacity 0.15s;
+}
+
+.roomCode:hover {
+  opacity: 1;
+}
+
+.playerCountLine {
+  text-align: center;
+  font-size: 0.9rem;
+  opacity: 0.6;
+}
+
+.playerList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.playerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 0.8rem;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.playerName {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+}
+
+.hostBadge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  background: #f59e0b;
+  color: #fff;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.readyBadge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+}
+
+.readyBadgeGreen {
+  background: #22c55e;
+  color: #fff;
+}
+
+.readyBadgeGray {
+  background: rgba(0, 0, 0, 0.15);
+  color: inherit;
+}
+
+.actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.btn {
+  flex: 1;
+  min-width: 80px;
+  padding: 0.65rem 1rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btnPrimary {
+  background: #3b82f6;
+  color: #fff;
+}
+
+.btnPrimary:hover:not(:disabled) {
+  opacity: 0.88;
+}
+
+.btnSecondary {
+  background: rgba(0, 0, 0, 0.12);
+  color: inherit;
+}
+
+.btnSecondary:hover:not(:disabled) {
+  opacity: 0.75;
+}
+
+.btnStart {
+  background: #22c55e;
+  color: #fff;
+}
+
+.btnStart:hover:not(:disabled) {
+  opacity: 0.88;
+}
+
+.btnLeave {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.btnLeave:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.25);
+}

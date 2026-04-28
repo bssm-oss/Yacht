@@ -32,17 +32,49 @@ export class RoomGateway {
     @MessageBody() data: { roomId: string; playerName: string },
     @ConnectedSocket() client: Socket
   ) {
-    const state = this.roomService.joinRoom(data.roomId, data.playerName, client.id);
-    if (!state) {
+    const result = this.roomService.joinRoom(data.roomId, data.playerName, client.id);
+    if (!result) {
       client.emit('room:error', { message: 'Room not found or full' });
       return;
     }
+
+    // Always join the socket.io room so spectators also get future game:state events
     client.join(data.roomId);
-    this.server.to(data.roomId).emit('game:state', state);
-    client.emit('room:joined', { gameState: state });
+
+    if ('spectating' in result) {
+      client.emit('room:spectating', { gameState: result.state });
+      return;
+    }
+
+    this.server.to(data.roomId).emit('game:state', result);
+    client.emit('room:joined', { gameState: result });
+  }
+
+  @SubscribeMessage('room:ready')
+  handleReady(
+    @MessageBody() data: { ready: boolean },
+    @ConnectedSocket() client: Socket
+  ) {
+    const result = this.roomService.setReady(client.id, data.ready);
+    if (result) {
+      this.server.to(result.roomId).emit('game:state', result.state);
+    }
+  }
+
+  @SubscribeMessage('room:start')
+  handleStart(
+    @ConnectedSocket() client: Socket
+  ) {
+    const result = this.roomService.startGame(client.id);
+    if (!result) {
+      client.emit('room:error', { message: '모든 플레이어가 준비해야 시작할 수 있습니다.' });
+      return;
+    }
+    this.server.to(result.roomId).emit('game:state', result.state);
   }
 
   handleDisconnect(client: Socket) {
+    this.roomService.removeSpectator(client.id);
     const result = this.roomService.removePlayer(client.id);
     if (result) {
       this.server.to(result.roomId).emit('game:state', result.state);
