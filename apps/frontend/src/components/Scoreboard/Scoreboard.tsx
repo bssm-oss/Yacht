@@ -142,7 +142,7 @@ const CATEGORY_LABELS: Record<keyof Scorecard, { label: string; help: string }> 
   fullhouse: { label: '풀하우스', help: '3+2 조합 → 전체 합' },
   sstraight: { label: '스몰 스트레이트', help: '연속 4개 → 15점' },
   lstraight: { label: '라지 스트레이트', help: '연속 5개 → 30점' },
-  yacht: { label: '야추', help: '전부 같은 눈 → 50점' },
+  yacht: { label: '요트', help: '전부 같은 눈 → 50점' },
 };
 
 function Row({ catId, players, activeIdx, preview, rollsUsed, onPick, gameOver }: RowProps) {
