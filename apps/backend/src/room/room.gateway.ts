@@ -8,7 +8,7 @@ import {
 import { Server, Socket } from 'socket.io';
 import { RoomService } from './room.service';
 
-@WebSocketGateway({ cors: true, namespace: '/' })
+@WebSocketGateway({ cors: { origin: '*' }, namespace: '/' })
 export class RoomGateway {
   @WebSocketServer()
   server: Server;
