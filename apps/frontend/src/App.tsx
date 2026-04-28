@@ -175,7 +175,7 @@ function App() {
                     cx="18" cy="18" r="15.9" fill="none" strokeWidth="2.8"
                     className={styles.timerProgress}
                     strokeDasharray={`${(timeLeft / TURN_LIMIT) * 100} 100`}
-                    strokeDashoffset="25"
+                    strokeDashoffset="0"
                     style={{ transition: timeLeft === TURN_LIMIT ? 'stroke 0.3s ease' : undefined }}
                   />
                 </svg>
