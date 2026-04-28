@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import type { DiceValue } from '@shared/types/game';
-import { TRAY } from './tray';
+import { TRAY, HOLD_SLOTS } from './tray';
 import { CUP } from './cup';
 import { makeUprightQuaternion, createDieMesh } from './dieMesh';
 
@@ -10,8 +10,10 @@ export const G = -32;
 export const RESTITUTION = 0.42;
 export const FRICTION = 0.78;
 export const ANG_FRICTION = 0.78;
-export const COLL_R = HALF * 1.05;
+export const COLL_R = HALF * 1.02;
 export const DIE_RESTITUTION = 0.4;
+
+export { HOLD_SLOTS };
 
 export interface DiceBody {
   mesh: THREE.Mesh;
@@ -20,6 +22,7 @@ export interface DiceBody {
   ang: THREE.Vector3;
   resting: boolean;
   inCup: boolean;
+  held: boolean;
   targetValue: DiceValue;
   settleT: number;
 }
@@ -44,6 +47,7 @@ export function createDice(): DiceBody[] {
       ang: new THREE.Vector3(),
       resting: false,
       inCup: true,
+      held: false,
       targetValue: 1,
       settleT: 0,
     });
@@ -52,13 +56,16 @@ export function createDice(): DiceBody[] {
 }
 
 export function layoutInTray(dice: DiceBody[], values: DiceValue[]) {
+  const rollCenterZ = 0.8;
+  const xStep = (TRAY.maxX - TRAY.minX - HALF * 2) / (dice.length - 1);
+  const xStart = TRAY.minX + HALF + 0.1;
   dice.forEach((d, i) => {
-    const x = TRAY.minX + (TRAY.maxX - TRAY.minX) * (0.18 + i * 0.16);
-    d.pos.set(x, HALF, 0);
+    d.pos.set(xStart + xStep * i, HALF, rollCenterZ);
     d.vel.set(0, 0, 0);
     d.ang.set(0, 0, 0);
     d.resting = true;
     d.inCup = false;
+    d.held = false;
     d.targetValue = values[i] ?? 1;
     d.mesh.position.copy(d.pos);
     d.mesh.quaternion.copy(makeUprightQuaternion(values[i] ?? 1, (i - 2) * 0.06));
@@ -72,11 +79,9 @@ export function stepPhysics(dice: DiceBody[], dt: number): boolean {
     if (d.resting || d.inCup) continue;
     rollingAny = true;
 
-    // Gravity
     d.vel.y += G * dt;
     d.pos.addScaledVector(d.vel, dt);
 
-    // Floor collision
     if (d.pos.y < FLOOR_Y) {
       d.pos.y = FLOOR_Y;
       if (d.vel.y < 0) d.vel.y = -d.vel.y * RESTITUTION;
@@ -85,7 +90,6 @@ export function stepPhysics(dice: DiceBody[], dt: number): boolean {
       d.ang.multiplyScalar(ANG_FRICTION);
     }
 
-    // Wall collisions
     if (d.pos.y < TRAY.wallH + HALF + 0.2) {
       if (d.pos.x < TRAY.minX + HALF) {
         d.pos.x = TRAY.minX + HALF;
@@ -105,11 +109,9 @@ export function stepPhysics(dice: DiceBody[], dt: number): boolean {
       }
     }
 
-    // Air drag
     d.vel.multiplyScalar(0.995);
     d.ang.multiplyScalar(0.992);
 
-    // Apply angular velocity
     const angle = d.ang.length() * dt;
     if (angle > 1e-5) {
       const axis = d.ang.clone().normalize();
@@ -119,7 +121,6 @@ export function stepPhysics(dice: DiceBody[], dt: number): boolean {
 
     d.mesh.position.copy(d.pos);
 
-    // Settling
     const onFloor = Math.abs(d.pos.y - FLOOR_Y) < 0.05;
     if (onFloor && d.vel.length() < 0.4 && d.ang.length() < 0.7) {
       d.settleT += dt;
@@ -138,8 +139,8 @@ export function stepPhysics(dice: DiceBody[], dt: number): boolean {
 }
 
 export function resolveCollisions(dice: DiceBody[]) {
-  // Multiple iterations for stability
-  const iterations = 5;
+  const iterations = 10;
+  const minD = COLL_R * 2;
 
   for (let iter = 0; iter < iterations; iter++) {
     for (let i = 0; i < dice.length; i++) {
@@ -154,7 +155,6 @@ export function resolveCollisions(dice: DiceBody[]) {
         const dy = b.pos.y - a.pos.y;
         const dz = b.pos.z - a.pos.z;
         const distSq = dx * dx + dy * dy + dz * dz;
-        const minD = COLL_R * 2;
 
         if (distSq < minD * minD && distSq > 1e-8) {
           const dist = Math.sqrt(distSq);
@@ -163,46 +163,57 @@ export function resolveCollisions(dice: DiceBody[]) {
           const nz = dz / dist;
           const overlap = minD - dist;
 
-          // Stronger push apart
-          const push = overlap * 0.8;
-          a.pos.x -= nx * push;
-          a.pos.y -= ny * push;
-          a.pos.z -= nz * push;
-          b.pos.x += nx * push;
-          b.pos.y += ny * push;
-          b.pos.z += nz * push;
+          if (a.held && b.held) {
+            // both immovable
+          } else if (a.held) {
+            b.pos.x += nx * overlap;
+            b.pos.y += ny * overlap;
+            b.pos.z += nz * overlap;
+            if (b.pos.y < FLOOR_Y) b.pos.y = FLOOR_Y + 0.01;
+          } else if (b.held) {
+            a.pos.x -= nx * overlap;
+            a.pos.y -= ny * overlap;
+            a.pos.z -= nz * overlap;
+            if (a.pos.y < FLOOR_Y) a.pos.y = FLOOR_Y + 0.01;
+          } else {
+            const push = overlap * 0.6;
+            a.pos.x -= nx * push;
+            a.pos.y -= ny * push;
+            a.pos.z -= nz * push;
+            b.pos.x += nx * push;
+            b.pos.y += ny * push;
+            b.pos.z += nz * push;
 
-          // Keep dice above floor
-          if (a.pos.y < FLOOR_Y) a.pos.y = FLOOR_Y + 0.02;
-          if (b.pos.y < FLOOR_Y) b.pos.y = FLOOR_Y + 0.02;
+            if (a.pos.y < FLOOR_Y) a.pos.y = FLOOR_Y + 0.01;
+            if (b.pos.y < FLOOR_Y) b.pos.y = FLOOR_Y + 0.01;
 
-          // Relative velocity
-          const rvx = b.vel.x - a.vel.x;
-          const rvy = b.vel.y - a.vel.y;
-          const rvz = b.vel.z - a.vel.z;
-          const velAlongN = rvx * nx + rvy * ny + rvz * nz;
+            const rvx = b.vel.x - a.vel.x;
+            const rvy = b.vel.y - a.vel.y;
+            const rvz = b.vel.z - a.vel.z;
+            const velAlongN = rvx * nx + rvy * ny + rvz * nz;
 
-          if (velAlongN < 0) {
-            const jImp = -(1 + DIE_RESTITUTION) * velAlongN / 2;
-            a.vel.x -= jImp * nx;
-            a.vel.y -= jImp * ny;
-            a.vel.z -= jImp * nz;
-            b.vel.x += jImp * nx;
-            b.vel.y += jImp * ny;
-            b.vel.z += jImp * nz;
+            if (velAlongN < 0) {
+              const jImp = -(1 + DIE_RESTITUTION) * velAlongN / 2;
+              a.vel.x -= jImp * nx;
+              a.vel.y -= jImp * ny;
+              a.vel.z -= jImp * nz;
+              b.vel.x += jImp * nx;
+              b.vel.y += jImp * ny;
+              b.vel.z += jImp * nz;
 
-            a.resting = false;
-            b.resting = false;
-            a.settleT = 0;
-            b.settleT = 0;
+              a.resting = false;
+              b.resting = false;
+              a.settleT = 0;
+              b.settleT = 0;
 
-            const spinMag = Math.min(12, Math.abs(velAlongN) * 6);
-            a.ang.x += (Math.random() - 0.5) * spinMag;
-            a.ang.y += (Math.random() - 0.5) * spinMag;
-            a.ang.z += (Math.random() - 0.5) * spinMag;
-            b.ang.x += (Math.random() - 0.5) * spinMag;
-            b.ang.y += (Math.random() - 0.5) * spinMag;
-            b.ang.z += (Math.random() - 0.5) * spinMag;
+              const spinMag = Math.min(12, Math.abs(velAlongN) * 6);
+              a.ang.x += (Math.random() - 0.5) * spinMag;
+              a.ang.y += (Math.random() - 0.5) * spinMag;
+              a.ang.z += (Math.random() - 0.5) * spinMag;
+              b.ang.x += (Math.random() - 0.5) * spinMag;
+              b.ang.y += (Math.random() - 0.5) * spinMag;
+              b.ang.z += (Math.random() - 0.5) * spinMag;
+            }
           }
 
           a.mesh.position.copy(a.pos);
