@@ -11,6 +11,10 @@
     "typecheck": "turbo run typecheck",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\""
   },
+  "dependencies": {
+    "vite": "^6.2.0",
+    "@vitejs/plugin-react": "^4.3.4"
+  },
   "devDependencies": {
     "turbo": "^2.4.4",
     "prettier": "^3.5.3",
