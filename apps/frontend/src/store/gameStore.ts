@@ -14,6 +14,7 @@ function makePlayer(id: string, name: string): Player {
     name,
     card: makeEmptyScorecard(),
     connected: true,
+    ready: false,
   };
 }
 
@@ -54,6 +55,7 @@ function createInitialState(playerCount: number): GameState {
     maxPlayers: 4,
     isPublic: true,
     hostName: '플레이어 1',
+    hostId: 'p0',
   };
 }
 

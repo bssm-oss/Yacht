@@ -1,5 +1,5 @@
 .scoresheet {
-  width: 320px;
+  width: 100%;
   border-right: 1px solid var(--hairline);
   background: var(--panel-bg);
   display: flex;

@@ -86,4 +86,21 @@ export class RoomGateway {
     const rooms = this.roomService.getPublicRooms();
     client.emit('room:list', { rooms });
   }
+
+  @SubscribeMessage('chat:message')
+  handleChat(
+    @MessageBody() data: { roomId: string; message: string },
+    @ConnectedSocket() client: Socket
+  ) {
+    const state = this.roomService.getRoom(data.roomId);
+    if (!state) return;
+    const player = state.players.find((p) => p.id === client.id);
+    const playerName = player?.name ?? '관전자';
+    this.server.to(data.roomId).emit('chat:message', {
+      playerId: client.id,
+      playerName,
+      message: data.message.slice(0, 200),
+      timestamp: Date.now(),
+    });
+  }
 }

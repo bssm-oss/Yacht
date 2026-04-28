@@ -88,10 +88,10 @@ export function makeUprightQuaternion(value: number, spinY = 0): THREE.Quaternio
   const e = new THREE.Euler();
   switch (value) {
     case 1:
-      e.set(0, 0, -Math.PI / 2);
+      e.set(0, 0, Math.PI / 2);
       break;
     case 6:
-      e.set(0, 0, Math.PI / 2);
+      e.set(0, 0, -Math.PI / 2);
       break;
     case 2:
       e.set(0, 0, 0);
@@ -100,10 +100,10 @@ export function makeUprightQuaternion(value: number, spinY = 0): THREE.Quaternio
       e.set(Math.PI, 0, 0);
       break;
     case 3:
-      e.set(Math.PI / 2, 0, 0);
+      e.set(-Math.PI / 2, 0, 0);
       break;
     case 4:
-      e.set(-Math.PI / 2, 0, 0);
+      e.set(Math.PI / 2, 0, 0);
       break;
   }
   const q = new THREE.Quaternion().setFromEuler(e);

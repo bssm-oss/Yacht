@@ -5,6 +5,13 @@ import type { RoomInfo } from '@shared/types/ws';
 
 export type ConnectionState = 'disconnected' | 'connecting' | 'connected';
 
+export interface ChatMessage {
+  playerId: string;
+  playerName: string;
+  message: string;
+  timestamp: number;
+}
+
 export interface MultiplayerStore {
   socket: Socket | null;
   roomId: string | null;
@@ -14,6 +21,7 @@ export interface MultiplayerStore {
   error: string | null;
   publicRooms: RoomInfo[];
   isSpectator: boolean;
+  chatMessages: ChatMessage[];
 
   createRoom: (playerName: string, maxPlayers: number, isPublic: boolean) => Promise<void>;
   joinRoom: (roomId: string, playerName: string) => Promise<void>;
@@ -24,6 +32,7 @@ export interface MultiplayerStore {
   fetchPublicRooms: () => void;
   setReady: (ready: boolean) => void;
   startGame: () => void;
+  sendChat: (message: string) => void;
 }
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3001';
@@ -37,6 +46,7 @@ export const useMultiplayerStore = create<MultiplayerStore>((set, get) => ({
   error: null,
   publicRooms: [],
   isSpectator: false,
+  chatMessages: [],
 
   createRoom: async (playerName: string, maxPlayers: number, isPublic: boolean) => {
     set({ connectionState: 'connecting', error: null });
@@ -76,8 +86,12 @@ export const useMultiplayerStore = create<MultiplayerStore>((set, get) => ({
       set({ gameState: state });
     });
 
+    socket.on('chat:message', (msg: ChatMessage) => {
+      set((s) => ({ chatMessages: [...s.chatMessages.slice(-99), msg] }));
+    });
+
     socket.on('disconnect', () => {
-      set({ connectionState: 'disconnected', socket: null, roomId: null, isSpectator: false });
+      set({ connectionState: 'disconnected', socket: null, roomId: null, isSpectator: false, chatMessages: [] });
     });
   },
 
@@ -119,8 +133,12 @@ export const useMultiplayerStore = create<MultiplayerStore>((set, get) => ({
       set({ gameState: state });
     });
 
+    socket.on('chat:message', (msg: ChatMessage) => {
+      set((s) => ({ chatMessages: [...s.chatMessages.slice(-99), msg] }));
+    });
+
     socket.on('disconnect', () => {
-      set({ connectionState: 'disconnected', socket: null, roomId: null, isSpectator: false });
+      set({ connectionState: 'disconnected', socket: null, roomId: null, isSpectator: false, chatMessages: [] });
     });
   },
 
@@ -137,6 +155,7 @@ export const useMultiplayerStore = create<MultiplayerStore>((set, get) => ({
       gameState: null,
       error: null,
       isSpectator: false,
+      chatMessages: [],
     });
   },
 
@@ -191,6 +210,13 @@ export const useMultiplayerStore = create<MultiplayerStore>((set, get) => ({
     const { socket } = get();
     if (socket) {
       socket.emit('room:start');
+    }
+  },
+
+  sendChat: (message: string) => {
+    const { socket, roomId } = get();
+    if (socket && roomId && message.trim()) {
+      socket.emit('chat:message', { roomId, message: message.trim() });
     }
   },
 }));

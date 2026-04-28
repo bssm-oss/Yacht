@@ -14,7 +14,7 @@
 .gamePanel {
   flex: 1;
   display: grid;
-  grid-template-columns: 320px 1fr;
+  grid-template-columns: min(40%, 520px) 1fr;
   overflow: hidden;
 }
 

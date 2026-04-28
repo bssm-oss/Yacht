@@ -8,6 +8,7 @@ import { GameOver } from './components/GameOver/GameOver';
 import { NewGameModal } from './components/NewGameModal/NewGameModal';
 import { TweaksPanel, type Theme, type Mood } from './components/TweaksPanel/TweaksPanel';
 import { WaitingRoom } from './components/WaitingRoom/WaitingRoom';
+import { Chat } from './components/Chat/Chat';
 import { CATEGORY_KEYS } from '@shared/types/game';
 import { scoreCategory } from '@shared/scoring';
 
@@ -30,7 +31,7 @@ function App() {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const isOnline = multiplayer.connectionState === 'connected';
-  const { isSpectator, setReady, startGame } = multiplayer;
+  const { isSpectator, setReady, startGame, chatMessages, sendChat } = multiplayer;
 
   // Use online game state when connected, local otherwise
   const gameState = isOnline ? (multiplayer.gameState ?? local.gameState) : local.gameState;
@@ -49,6 +50,13 @@ function App() {
   useEffect(() => {
     if (!isOnline) prevOnlineRollsUsedRef.current = -1;
   }, [isOnline]);
+
+  // 온라인 접속 완료 시 새 게임 모달 자동 닫기
+  useEffect(() => {
+    if (multiplayer.connectionState === 'connected') {
+      setShowNewGame(false);
+    }
+  }, [multiplayer.connectionState]);
 
   const activePlayer = gameState.players[gameState.activePlayerIndex];
 
@@ -78,7 +86,7 @@ function App() {
     }
   }, [gameState.activePlayerIndex, gameState.phase]);
 
-  // 턴 타이머
+  // 타이머 - 굴릴 때마다 리셋
   useEffect(() => {
     if (timerRef.current) clearInterval(timerRef.current);
     if (gameState.phase !== 'playing') { setTimeLeft(TURN_LIMIT); return; }
@@ -95,22 +103,32 @@ function App() {
     }, 1000);
 
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [gameState.activePlayerIndex, gameState.phase]);
+  }, [gameState.activePlayerIndex, gameState.phase, gameState.rollsUsed]);
 
-  // 시간 초과 시 자동 처리: 가장 높은 점수 카테고리 선택
+  // 시간 초과 시 자동 처리: 점수 있는 카테고리 중 가장 높은 것 선택
   useEffect(() => {
     if (timeLeft !== 0 || gameState.phase !== 'playing') return;
     const player = gameState.players[gameState.activePlayerIndex];
     const emptyCats = CATEGORY_KEYS.filter((k) => player?.card[k] == null);
     if (emptyCats.length === 0) return;
-    const bestCat = emptyCats.reduce((best, k) => {
-      return scoreCategory(k, gameState.dice) >= scoreCategory(best, gameState.dice) ? k : best;
-    });
+
     if (gameState.rollsUsed === 0) {
       handleRoll();
-      setTimeout(() => handlePickCategory(bestCat), 300);
+      setTimeout(() => {
+        const nonZero = emptyCats.filter((k) => scoreCategory(k, gameState.dice) > 0);
+        const pool = nonZero.length > 0 ? nonZero : emptyCats;
+        const best = pool.reduce((b, k) =>
+          scoreCategory(k, gameState.dice) >= scoreCategory(b, gameState.dice) ? k : b
+        );
+        handlePickCategory(best);
+      }, 300);
     } else {
-      handlePickCategory(bestCat);
+      const nonZero = emptyCats.filter((k) => scoreCategory(k, gameState.dice) > 0);
+      const pool = nonZero.length > 0 ? nonZero : emptyCats;
+      const best = pool.reduce((b, k) =>
+        scoreCategory(k, gameState.dice) >= scoreCategory(b, gameState.dice) ? k : b
+      );
+      handlePickCategory(best);
     }
   }, [timeLeft]);
 
@@ -200,6 +218,14 @@ function App() {
           </div>
         </div>
       </main>
+
+      {isOnline && (
+        <Chat
+          messages={chatMessages}
+          playerId={multiplayer.playerId}
+          onSend={sendChat}
+        />
+      )}
 
       <div className={styles.tweaks}>
         <TweaksPanel
