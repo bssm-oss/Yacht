@@ -88,11 +88,11 @@
 }
 
 .timerTrack {
-  stroke: rgba(255, 255, 255, 0.2);
+  stroke: rgba(0, 0, 0, 0.12);
 }
 
 .timerProgress {
-  stroke: rgba(255, 255, 255, 0.85);
+  stroke: rgba(0, 0, 0, 0.65);
   stroke-linecap: round;
   transition: stroke-dasharray 0.9s linear, stroke 0.3s ease;
 }
@@ -107,7 +107,7 @@
   font-family: var(--font-text);
   font-size: 15px;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(0, 0, 0, 0.7);
   line-height: 1;
 }
 

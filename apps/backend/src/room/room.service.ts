@@ -64,22 +64,35 @@ export class RoomService {
   removePlayer(socketId: string): { roomId: string; state: GameState } | null {
     for (const [roomId, state] of this.rooms) {
       const idx = state.players.findIndex((p) => p.id === socketId);
-      if (idx >= 0) {
-        state.players.splice(idx, 1);
+      if (idx < 0) continue;
 
-        // Adjust active player index
-        if (state.activePlayerIndex >= state.players.length) {
-          state.activePlayerIndex = 0;
-        }
+      const wasActive = state.activePlayerIndex === idx;
+      state.players.splice(idx, 1);
 
-        // Delete room if empty
-        if (state.players.length === 0) {
-          this.rooms.delete(roomId);
-          return null;
-        }
+      // Delete room if empty
+      if (state.players.length === 0) {
+        this.rooms.delete(roomId);
+        return null;
+      }
 
+      // 1명만 남으면 게임 종료
+      if (state.players.length === 1 && state.phase === 'playing') {
+        state.phase = 'ended';
+        state.winnerId = state.players[0].id;
         return { roomId, state };
       }
+
+      // 나간 플레이어가 active였으면 해당 index로 턴 넘기기 (이미 splice됐으므로 범위 조정)
+      if (wasActive) {
+        state.activePlayerIndex = idx % state.players.length;
+        state.dice = [1, 1, 1, 1, 1];
+        state.held = [false, false, false, false, false];
+        state.rollsUsed = 0;
+      } else if (state.activePlayerIndex >= state.players.length) {
+        state.activePlayerIndex = 0;
+      }
+
+      return { roomId, state };
     }
     return null;
   }
