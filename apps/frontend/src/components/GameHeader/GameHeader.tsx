@@ -4,10 +4,21 @@ interface GameHeaderProps {
   playerName: string;
   onPlayerNameChange?: (name: string) => void;
   rollsUsed: number;
+  isOnline?: boolean;
+  roomId?: string | null;
   onNewGame?: () => void;
+  onLeave?: () => void;
 }
 
-export function GameHeader({ playerName, onPlayerNameChange, rollsUsed, onNewGame }: GameHeaderProps) {
+export function GameHeader({
+  playerName,
+  onPlayerNameChange,
+  rollsUsed,
+  isOnline = false,
+  roomId,
+  onNewGame,
+  onLeave,
+}: GameHeaderProps) {
   return (
     <header className={styles.header}>
       <div className={styles.left}>
@@ -20,6 +31,9 @@ export function GameHeader({ playerName, onPlayerNameChange, rollsUsed, onNewGam
           </svg>
           <span className={styles.title}>BSSM-Yacht</span>
         </div>
+        {isOnline && roomId && (
+          <span className={styles.roomBadge}>방 코드: {roomId}</span>
+        )}
       </div>
 
       <div className={styles.center}>
@@ -29,6 +43,7 @@ export function GameHeader({ playerName, onPlayerNameChange, rollsUsed, onNewGam
           value={playerName}
           onChange={(e) => onPlayerNameChange?.(e.target.value)}
           placeholder="플레이어 이름"
+          disabled={isOnline}
         />
         <div className={styles.pips}>
           {[0, 1, 2].map((i) => (
@@ -38,9 +53,15 @@ export function GameHeader({ playerName, onPlayerNameChange, rollsUsed, onNewGam
       </div>
 
       <div className={styles.right}>
-        <button className={styles.newGameBtn} onClick={onNewGame}>
-          새 게임
-        </button>
+        {isOnline ? (
+          <button className={styles.leaveBtn} onClick={onLeave}>
+            나가기
+          </button>
+        ) : (
+          <button className={styles.newGameBtn} onClick={onNewGame}>
+            새 게임
+          </button>
+        )}
       </div>
     </header>
   );

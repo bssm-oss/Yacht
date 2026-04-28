@@ -1,0 +1,243 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  backdrop-filter: blur(4px);
+}
+
+.modal {
+  background: var(--bg-card, #ffffff);
+  border-radius: 18px;
+  width: 360px;
+  max-width: 90vw;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 20px 0;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text-primary, #1d1d1f);
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: var(--text-secondary, #8e8e93);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 8px;
+  line-height: 1;
+  transition: background 0.15s;
+}
+.closeBtn:hover { background: var(--bg-hover, #f2f2f7); }
+
+.tabs {
+  display: flex;
+  gap: 6px;
+  padding: 16px 20px 0;
+}
+
+.tab {
+  flex: 1;
+  padding: 8px;
+  border: none;
+  border-radius: 10px;
+  background: var(--bg-hover, #f2f2f7);
+  color: var(--text-secondary, #8e8e93);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.tab.tabActive {
+  background: var(--color-apple-blue, #0071e3);
+  color: #fff;
+}
+
+.content {
+  padding: 16px 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary, #8e8e93);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.options {
+  display: flex;
+  gap: 6px;
+}
+
+.option {
+  flex: 1;
+  padding: 8px 0;
+  border: 1.5px solid var(--hairline, #e5e5ea);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-primary, #1d1d1f);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+.option.optionActive {
+  border-color: var(--color-apple-blue, #0071e3);
+  background: rgba(0, 113, 227, 0.08);
+  color: var(--color-apple-blue, #0071e3);
+}
+
+.input {
+  padding: 10px 12px;
+  border: 1.5px solid var(--hairline, #e5e5ea);
+  border-radius: 10px;
+  font-size: 15px;
+  background: var(--bg-input, #f9f9fb);
+  color: var(--text-primary, #1d1d1f);
+  outline: none;
+  transition: border-color 0.15s;
+  width: 100%;
+  box-sizing: border-box;
+}
+.input:focus { border-color: var(--color-apple-blue, #0071e3); }
+
+.codeInput {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 6px;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.primaryBtn {
+  padding: 12px;
+  border: none;
+  border-radius: 12px;
+  background: var(--color-apple-blue, #0071e3);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  width: 100%;
+}
+.primaryBtn:hover { opacity: 0.9; }
+.primaryBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.dangerBtn {
+  padding: 12px;
+  border: none;
+  border-radius: 12px;
+  background: #ff3b30;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  width: 100%;
+}
+.dangerBtn:hover { opacity: 0.9; }
+
+.onlineTabs {
+  display: flex;
+  gap: 6px;
+}
+.onlineTab {
+  flex: 1;
+  padding: 7px;
+  border: 1.5px solid var(--hairline, #e5e5ea);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary, #8e8e93);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.onlineTab.onlineTabActive {
+  border-color: var(--color-apple-blue, #0071e3);
+  color: var(--color-apple-blue, #0071e3);
+}
+
+.roomConnected {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.roomCode {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: 8px;
+  text-align: center;
+  padding: 16px;
+  background: var(--bg-hover, #f2f2f7);
+  border-radius: 12px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s;
+  position: relative;
+}
+.roomCode:hover { background: var(--hairline, #e5e5ea); }
+
+.copyHint {
+  display: block;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary, #8e8e93);
+  letter-spacing: 0;
+  margin-top: 4px;
+}
+
+.connectedBadge {
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: #34c759;
+}
+
+.btnRow {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.errorMsg {
+  font-size: 13px;
+  color: #ff3b30;
+  padding: 8px 12px;
+  background: rgba(255, 59, 48, 0.08);
+  border-radius: 8px;
+}
+
+.connecting {
+  text-align: center;
+  color: var(--text-secondary, #8e8e93);
+  font-size: 14px;
+  padding: 8px;
+}

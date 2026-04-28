@@ -11,6 +11,17 @@
 .left {
   display: flex;
   align-items: center;
+  gap: 10px;
+}
+
+.roomBadge {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #34c759;
+  background: rgba(52, 199, 89, 0.12);
+  padding: 3px 8px;
+  border-radius: 8px;
 }
 
 .logo {
@@ -89,4 +100,25 @@
 
 .newGameBtn:hover {
   background: rgba(0, 113, 227, 0.08);
+}
+
+.playerInput:disabled {
+  cursor: default;
+  color: var(--text-secondary);
+}
+
+.leaveBtn {
+  font-family: var(--font-text);
+  font-size: 13px;
+  font-weight: 500;
+  color: #ff3b30;
+  background: transparent;
+  border: none;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.leaveBtn:hover {
+  background: rgba(255, 59, 48, 0.08);
 }
