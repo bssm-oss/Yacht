@@ -1,9 +1,9 @@
 .root {
   position: fixed;
-  bottom: 64px;
-  right: 16px;
+  bottom: 16px;
+  left: calc(min(40%, 520px) + 16px);
   z-index: 900;
-  width: 300px;
+  width: 260px;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -13,58 +13,54 @@
 .list {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  max-height: 220px;
+  gap: 3px;
+  max-height: 200px;
   overflow: hidden;
 }
 
 .msg {
   display: flex;
   flex-wrap: wrap;
+  align-items: baseline;
   gap: 4px;
-  line-height: 1.4;
-  padding: 1px 0;
-  animation: fadeIn 0.15s ease;
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--hairline);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  animation: slideIn 0.15s ease;
 }
 
-@keyframes fadeIn {
+@keyframes slideIn {
   from { opacity: 0; transform: translateY(4px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
 .name {
   font-family: var(--font-text);
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 700;
-  color: #a8d8ea;
-  text-shadow:
-    -1px -1px 0 rgba(0,0,0,0.7),
-     1px -1px 0 rgba(0,0,0,0.7),
-    -1px  1px 0 rgba(0,0,0,0.7),
-     1px  1px 0 rgba(0,0,0,0.7);
+  color: var(--color-apple-blue);
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .myName {
-  color: #ffd700;
+  color: #bf5af2;
 }
 
 .text {
   font-family: var(--font-text);
-  font-size: 13px;
-  color: #fff;
+  font-size: 12px;
+  color: var(--text-primary);
   word-break: break-word;
-  text-shadow:
-    -1px -1px 0 rgba(0,0,0,0.7),
-     1px -1px 0 rgba(0,0,0,0.7),
-    -1px  1px 0 rgba(0,0,0,0.7),
-     1px  1px 0 rgba(0,0,0,0.7);
+  line-height: 1.4;
 }
 
 .inputWrap {
   pointer-events: none;
   opacity: 0;
-  transform: translateY(4px);
+  transform: translateY(3px);
   transition: opacity 0.12s ease, transform 0.12s ease;
 }
 
@@ -77,26 +73,26 @@
 .input {
   width: 100%;
   box-sizing: border-box;
-  background: rgba(0, 0, 0, 0.55);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 4px;
-  color: #fff;
   font-family: var(--font-text);
   font-size: 13px;
-  padding: 6px 10px;
+  color: var(--text-primary);
+  background: var(--bg-card);
+  border: 1px solid var(--color-apple-blue);
+  border-radius: 8px;
+  padding: 7px 12px;
   outline: none;
-  caret-color: #fff;
+  box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.12);
 }
 
 .input::placeholder {
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--text-tertiary);
 }
 
 .hint {
   font-family: var(--font-text);
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.35);
-  text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+  color: var(--text-tertiary);
+  padding: 2px 8px;
   pointer-events: none;
   user-select: none;
 }

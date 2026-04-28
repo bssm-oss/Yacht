@@ -29,7 +29,6 @@ export function Chat({ messages, playerId, onSend }: ChatProps) {
     closeInput();
   }, [input, onSend, closeInput]);
 
-  // 전역 Enter 키로 입력창 활성화
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement).tagName;
@@ -43,14 +42,13 @@ export function Chat({ messages, playerId, onSend }: ChatProps) {
     return () => window.removeEventListener('keydown', onKey);
   }, [openInput]);
 
-  // 새 메시지 오면 스크롤
   useEffect(() => {
     if (listRef.current) {
       listRef.current.scrollTop = listRef.current.scrollHeight;
     }
   }, [messages.length]);
 
-  const displayed = messages.slice(-12);
+  const displayed = messages.slice(-10);
 
   return (
     <div className={styles.root}>
@@ -82,7 +80,7 @@ export function Chat({ messages, playerId, onSend }: ChatProps) {
       </div>
 
       {!inputActive && (
-        <div className={styles.hint}>Enter — 채팅</div>
+        <span className={styles.hint}>Enter — 채팅</span>
       )}
     </div>
   );
