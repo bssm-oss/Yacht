@@ -55,6 +55,13 @@
   opacity: 0.9;
 }
 
+.rollBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  box-shadow: none;
+  pointer-events: none;
+}
+
 .tweaks {
   position: fixed;
   top: 58px;

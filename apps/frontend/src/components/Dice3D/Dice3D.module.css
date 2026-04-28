@@ -4,35 +4,56 @@
   overflow: hidden;
 }
 
-.heldOverlay {
+.diceHitbox {
   position: absolute;
-  inset: 0;
-  pointer-events: none;
+  width: 50px;
+  height: 50px;
+  transform: translate(-50%, -50%);
+  background: transparent;
+  border: none;
+  cursor: default;
+  z-index: 10;
+  padding: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  transition: transform 0.15s ease;
 }
 
-.heldPill {
+.diceClickable {
+  cursor: pointer;
+}
+
+.diceClickable:hover {
+  transform: translate(-50%, -50%) scale(1.1);
+}
+
+.diceClickable:active {
+  transform: translate(-50%, -50%) scale(0.95);
+}
+
+.diceHeld {
+  background: rgba(0, 113, 227, 0.12);
+  border: 2px solid var(--color-apple-blue);
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.diceHeld:hover {
+  background: rgba(0, 113, 227, 0.2);
+}
+
+.heldBadge {
   position: absolute;
-  transform: translate(-50%, 0);
+  bottom: -18px;
   background: var(--color-apple-blue);
   color: white;
   font-family: var(--font-text);
-  font-size: 10px;
-  font-weight: 600;
+  font-size: 9px;
+  font-weight: 700;
   letter-spacing: 0.5px;
-  text-transform: uppercase;
-  padding: 3px 8px;
+  padding: 2px 6px;
   border-radius: var(--radius-pill);
-  display: flex;
-  align-items: center;
-  gap: 4px;
   white-space: nowrap;
-  box-shadow: 0 2px 8px rgba(0, 113, 227, 0.3);
-}
-
-.heldDot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: white;
-  display: inline-block;
+  pointer-events: none;
 }

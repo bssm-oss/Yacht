@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import type { DiceValue } from '@shared/types/game';
-import { createTray, createGroundShadow, TRAY } from './tray';
+import { createTray, createGroundShadow, HOLD_SLOTS } from './tray';
 import { createCup, CUP } from './cup';
-import { createDice, layoutInTray, stepPhysics, resolveCollisions, DiceBody } from './physics';
+import { createDice, layoutInTray, stepPhysics, resolveCollisions, HALF, DiceBody } from './physics';
 import { makeUprightQuaternion } from './dieMesh';
 import { updateCupShake, CupAnimation } from './cupAnimation';
 
@@ -17,37 +17,25 @@ interface Dice3DProps {
   rollSeed?: number;
 }
 
+interface ScreenPos {
+  x: number;
+  y: number;
+}
+
 export function Dice3D({ values, held, onRollComplete, onToggleHold, rollSeed = 0 }: Dice3DProps) {
   const mountRef = useRef<HTMLDivElement>(null);
-  const sceneRef = useRef<{
-    scene: THREE.Scene;
-    camera: THREE.PerspectiveCamera;
-    renderer: THREE.WebGLRenderer;
-    dice: DiceBody[];
-    cupGroup: THREE.Group;
-    heldLights: THREE.PointLight[];
-    cupAnim: CupAnimation | null;
-    rolling: boolean;
-    raf: number;
-  } | null>(null);
+  const [dicePositions, setDicePositions] = useState<ScreenPos[]>([]);
+  const [isRolling, setIsRolling] = useState(false);
 
   const valuesRef = useRef(values);
   const heldRef = useRef(held);
   const callbacksRef = useRef({ onRollComplete, onToggleHold });
+  const diceRef = useRef<DiceBody[]>([]);
 
-  useEffect(() => {
-    valuesRef.current = values;
-  }, [values]);
+  useEffect(() => { valuesRef.current = values; }, [values]);
+  useEffect(() => { heldRef.current = held; }, [held]);
+  useEffect(() => { callbacksRef.current = { onRollComplete, onToggleHold }; }, [onRollComplete, onToggleHold]);
 
-  useEffect(() => {
-    heldRef.current = held;
-  }, [held]);
-
-  useEffect(() => {
-    callbacksRef.current = { onRollComplete, onToggleHold };
-  }, [onRollComplete, onToggleHold]);
-
-  // Setup scene
   useEffect(() => {
     const mount = mountRef.current;
     if (!mount) return;
@@ -68,7 +56,6 @@ export function Dice3D({ values, held, onRollComplete, onToggleHold, rollSeed = 
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     mount.appendChild(renderer.domElement);
 
-    // Lights
     scene.add(new THREE.AmbientLight(0xffffff, 0.55));
     const key = new THREE.DirectionalLight(0xffffff, 1.0);
     key.position.set(4, 12, 6);
@@ -81,33 +68,17 @@ export function Dice3D({ values, held, onRollComplete, onToggleHold, rollSeed = 
     rim.position.set(-6, 4, -4);
     scene.add(rim);
 
-    // Tray
-    const trayGroup = createTray();
-    scene.add(trayGroup);
+    scene.add(createTray());
+    scene.add(createGroundShadow());
 
-    // Ground shadow
-    const groundShadow = createGroundShadow();
-    scene.add(groundShadow);
-
-    // Cup
     const cupGroup = createCup();
     scene.add(cupGroup);
 
-    // Dice
     const dice = createDice();
     dice.forEach((d) => scene.add(d.mesh));
     layoutInTray(dice, valuesRef.current);
+    diceRef.current = dice;
 
-    // Held indicator lights (one per die)
-    const heldLights: THREE.PointLight[] = [];
-    for (let i = 0; i < 5; i++) {
-      const light = new THREE.PointLight(0x0071e3, 0, 2);
-      light.position.set(0, 0, 0);
-      scene.add(light);
-      heldLights.push(light);
-    }
-
-    // Resize observer
     const onResize = () => {
       const w2 = mount.clientWidth;
       const h2 = mount.clientHeight;
@@ -119,89 +90,112 @@ export function Dice3D({ values, held, onRollComplete, onToggleHold, rollSeed = 
     const ro = new ResizeObserver(onResize);
     ro.observe(mount);
 
-    // Raycaster for clicks
-    const raycaster = new THREE.Raycaster();
-    const mouse = new THREE.Vector2();
     const onPointerDown = (e: PointerEvent) => {
-      const rect = renderer.domElement.getBoundingClientRect();
-      mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-      mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-      raycaster.setFromCamera(mouse, camera);
+      if (!diceRef.current.length) return;
 
-      // Check dice first
-      const diceHit = raycaster.intersectObjects(dice.map((d) => d.mesh));
-      if (diceHit.length) {
-        const idx = dice.findIndex((d) => d.mesh === diceHit[0].object);
-        if (idx >= 0 && callbacksRef.current.onToggleHold) {
-          callbacksRef.current.onToggleHold(idx);
+      const rect = renderer.domElement.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const clickY = e.clientY - rect.top;
+
+      let closestIdx = -1;
+      let closestDist = 44;
+
+      diceRef.current.forEach((d, i) => {
+        if (d.inCup) return;
+        const screenPos = d.mesh.position.clone().project(camera);
+        const sx = (screenPos.x * 0.5 + 0.5) * rect.width;
+        const sy = (-screenPos.y * 0.5 + 0.5) * rect.height;
+        const dist = Math.sqrt((clickX - sx) ** 2 + (clickY - sy) ** 2);
+        if (dist < closestDist) {
+          closestDist = dist;
+          closestIdx = i;
         }
-        return;
+      });
+
+      if (closestIdx >= 0 && callbacksRef.current.onToggleHold) {
+        callbacksRef.current.onToggleHold(closestIdx);
       }
     };
     renderer.domElement.addEventListener('pointerdown', onPointerDown);
 
-    // Animation loop
     let raf = 0;
     let lastT = performance.now();
     let rolling = false;
     let cupAnim: CupAnimation | null = null;
+    let prevHeld = new Array(5).fill(false);
+
+    // dieToSlot[i] = which hold slot die i occupies (-1 = none)
+    const dieToSlot = new Array(5).fill(-1);
 
     const tick = () => {
       const now = performance.now();
       const dt = Math.min(0.033, (now - lastT) / 1000);
       lastT = now;
 
-      // Cup animation
       if (cupAnim) {
         const result = updateCupShake(cupGroup, cupAnim, dt, dice, valuesRef.current);
-        if (result.diceReleased && !rolling) {
-          rolling = true;
-        }
-        if (result.finished) {
-          cupAnim = null;
-        }
+        if (result.diceReleased && !rolling) rolling = true;
+        if (result.finished) cupAnim = null;
       }
 
-      // Update held dice positions and lights
       const heldArr = heldRef.current;
-      dice.forEach((d, i) => {
-        if (heldArr?.[i] && !d.inCup && d.resting && !rolling) {
-          // Move held dice to top row in tray
-          const targetX = TRAY.minX + 0.5 + i * 0.55;
-          const targetZ = TRAY.minZ + 0.4;
-          const targetY = HALF;
 
-          // Smooth lerp to held position
-          d.pos.x += (targetX - d.pos.x) * 0.12;
-          d.pos.z += (targetZ - d.pos.z) * 0.12;
-          d.pos.y += (targetY - d.pos.y) * 0.12;
+      dice.forEach((d, i) => {
+        const isHeld = heldArr?.[i] ?? false;
+        const wasHeld = prevHeld[i];
+
+        d.held = isHeld;
+
+        if (!wasHeld && isHeld && !d.inCup) {
+          // Just became held: assign next free slot in order
+          const usedSlots = new Set(dieToSlot.filter((s) => s >= 0));
+          for (let s = 0; s < 5; s++) {
+            if (!usedSlots.has(s)) {
+              dieToSlot[i] = s;
+              break;
+            }
+          }
+          d.resting = true;
           d.vel.set(0, 0, 0);
           d.ang.set(0, 0, 0);
-          d.mesh.position.copy(d.pos);
+          d.settleT = 0;
+        }
 
-          // Update glow light
-          heldLights[i].position.copy(d.pos);
-          heldLights[i].position.y += 0.3;
-          heldLights[i].intensity = 1.5;
+        if (wasHeld && !isHeld && !d.inCup) {
+          // Just un-held: free slot and launch back to roll zone
+          dieToSlot[i] = -1;
+          d.resting = false;
+          d.settleT = 0;
+          d.vel.set(
+            (Math.random() - 0.5) * 1.5,
+            2.0,
+            3.5 + Math.random() * 1.5
+          );
+          d.ang.set(
+            (Math.random() - 0.5) * 10,
+            (Math.random() - 0.5) * 10,
+            (Math.random() - 0.5) * 10
+          );
+        }
 
-          // Blue emissive glow on die
-          const materials = d.mesh.material as THREE.MeshStandardMaterial[];
-          materials.forEach((mat) => {
-            mat.emissive.setHex(0x0071e3);
-            mat.emissiveIntensity = 0.3;
-          });
-        } else {
-          // Turn off glow
-          heldLights[i].intensity = 0;
-          const materials = d.mesh.material as THREE.MeshStandardMaterial[];
-          materials.forEach((mat) => {
-            mat.emissive.setHex(0x000000);
-            mat.emissiveIntensity = 0;
-          });
+        if (isHeld && !d.inCup) {
+          const slotIdx = dieToSlot[i];
+          if (slotIdx >= 0) {
+            const slot = HOLD_SLOTS[slotIdx];
+            d.pos.x += (slot.x - d.pos.x) * 0.12;
+            d.pos.z += (slot.z - d.pos.z) * 0.12;
+            d.pos.y += (HALF - d.pos.y) * 0.12;
+            d.vel.set(0, 0, 0);
+            d.ang.set(0, 0, 0);
+            d.resting = true;
+            d.mesh.position.copy(d.pos);
+            d.mesh.quaternion.slerp(makeUprightQuaternion(d.targetValue, 0), 0.08);
+          }
         }
       });
 
-      // Physics
+      prevHeld = [...(heldArr ?? new Array(5).fill(false))];
+
       const rollingAny = stepPhysics(dice, dt);
       resolveCollisions(dice);
 
@@ -212,24 +206,22 @@ export function Dice3D({ values, held, onRollComplete, onToggleHold, rollSeed = 
         }
       }
 
+      const rect2 = renderer.domElement.getBoundingClientRect();
+      const positions: ScreenPos[] = dice.map((d) => {
+        const v = d.mesh.position.clone().project(camera);
+        return {
+          x: (v.x * 0.5 + 0.5) * rect2.width,
+          y: (-v.y * 0.5 + 0.5) * rect2.height,
+        };
+      });
+      setDicePositions(positions);
+      setIsRolling(rolling);
+
       renderer.render(scene, camera);
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
 
-    sceneRef.current = {
-      scene,
-      camera,
-      renderer,
-      dice,
-      cupGroup,
-      heldLights,
-      cupAnim,
-      rolling,
-      raf,
-    };
-
-    // Expose API for parent
     (Dice3D as unknown as { api: Dice3DAPI }).api = {
       startRoll: (targetValues: DiceValue[], heldArr: boolean[]) => {
         cupAnim = { t: 0, duration: 1.2, spilled: false, phase: 'shake' };
@@ -238,11 +230,13 @@ export function Dice3D({ values, held, onRollComplete, onToggleHold, rollSeed = 
             d.targetValue = targetValues[i];
             d.resting = true;
             d.inCup = false;
+            d.held = true;
             return;
           }
           d.targetValue = targetValues[i];
           d.resting = false;
           d.inCup = true;
+          d.held = false;
           d.settleT = 0;
           d.pos.set(CUP.x + (Math.random() - 0.5) * 0.5, CUP.y + (i - 2) * 0.15, CUP.z + (Math.random() - 0.5) * 0.5);
           d.vel.set(0, 0, 0);
@@ -263,37 +257,39 @@ export function Dice3D({ values, held, onRollComplete, onToggleHold, rollSeed = 
       cancelAnimationFrame(raf);
       ro.disconnect();
       renderer.domElement.removeEventListener('pointerdown', onPointerDown);
-      try {
-        mount.removeChild(renderer.domElement);
-      } catch (e) {
-        // ignore
-      }
+      try { mount.removeChild(renderer.domElement); } catch (_) { /* ignore */ }
       renderer.dispose();
-      sceneRef.current = null;
+      diceRef.current = [];
     };
   }, []);
 
-  // Handle roll trigger
   const lastSeedRef = useRef(rollSeed);
   useEffect(() => {
     if (rollSeed === lastSeedRef.current) return;
     lastSeedRef.current = rollSeed;
     const api = (Dice3D as unknown as { api?: Dice3DAPI }).api;
-    if (api) {
-      api.startRoll(values, held);
-    }
+    if (api) api.startRoll(values, held);
   }, [rollSeed, values, held]);
 
-  // Sync values
   useEffect(() => {
     const api = (Dice3D as unknown as { api?: Dice3DAPI }).api;
-    if (api) {
-      api.syncRestingValues(values);
-    }
+    if (api) api.syncRestingValues(values);
   }, [values.join(',')]);
 
   return (
-    <div className={styles.mount} ref={mountRef} />
+    <div className={styles.mount} ref={mountRef}>
+      {dicePositions.map((pos, i) => (
+        <button
+          key={i}
+          className={`${styles.diceHitbox} ${held[i] ? styles.diceHeld : ''} ${!isRolling ? styles.diceClickable : ''}`}
+          style={{ left: pos.x, top: pos.y }}
+          onClick={() => !isRolling && onToggleHold?.(i)}
+          aria-label={`Die ${i + 1}: ${values[i]}${held[i] ? ' (held)' : ''}`}
+        >
+          {held[i] && <span className={styles.heldBadge}>HELD</span>}
+        </button>
+      ))}
+    </div>
   );
 }
 
