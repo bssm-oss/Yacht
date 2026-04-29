@@ -25,6 +25,10 @@ export interface DiceBody {
   held: boolean;
   targetValue: DiceValue;
   settleT: number;
+  snapping: boolean;
+  snapT: number;
+  snapStartQ: THREE.Quaternion;
+  snapTargetQ: THREE.Quaternion;
 }
 
 export function createDice(): DiceBody[] {
@@ -50,6 +54,10 @@ export function createDice(): DiceBody[] {
       held: false,
       targetValue: 1,
       settleT: 0,
+      snapping: false,
+      snapT: 0,
+      snapStartQ: new THREE.Quaternion(),
+      snapTargetQ: new THREE.Quaternion(),
     });
   }
   return dice;
@@ -128,7 +136,10 @@ export function stepPhysics(dice: DiceBody[], dt: number): boolean {
         d.resting = true;
         d.settleT = 0;
         const yaw = (Math.random() - 0.5) * 0.4;
-        d.mesh.quaternion.copy(makeUprightQuaternion(d.targetValue, yaw));
+        d.snapping = true;
+        d.snapT = 0;
+        d.snapStartQ.copy(d.mesh.quaternion);
+        d.snapTargetQ.copy(makeUprightQuaternion(d.targetValue, yaw));
       }
     } else {
       d.settleT = 0;
@@ -136,6 +147,24 @@ export function stepPhysics(dice: DiceBody[], dt: number): boolean {
   }
 
   return rollingAny;
+}
+
+export function stepSnap(dice: DiceBody[], dt: number): boolean {
+  let anySnapping = false;
+  for (const d of dice) {
+    if (!d.snapping) continue;
+    anySnapping = true;
+    d.snapT += dt;
+    const t = Math.min(1, d.snapT / 0.35);
+    // easeInOutQuad
+    const eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+    d.mesh.quaternion.slerpQuaternions(d.snapStartQ, d.snapTargetQ, eased);
+    if (t >= 1) {
+      d.snapping = false;
+      d.mesh.quaternion.copy(d.snapTargetQ);
+    }
+  }
+  return anySnapping;
 }
 
 export function resolveCollisions(dice: DiceBody[]) {

@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import type { DiceValue } from '@shared/types/game';
 import { createTray, createGroundShadow, HOLD_SLOTS } from './tray';
 import { createCup, CUP } from './cup';
-import { createDice, layoutInTray, stepPhysics, resolveCollisions, HALF, DiceBody } from './physics';
+import { createDice, layoutInTray, stepPhysics, stepSnap, resolveCollisions, HALF, DiceBody } from './physics';
 import { makeUprightQuaternion } from './dieMesh';
 import { updateCupShake, CupAnimation } from './cupAnimation';
 
@@ -198,8 +198,9 @@ export function Dice3D({ values, held, onRollComplete, onToggleHold, rollSeed = 
 
       const rollingAny = stepPhysics(dice, dt);
       resolveCollisions(dice);
+      const snapping = stepSnap(dice, dt);
 
-      if (rolling && !rollingAny && !cupAnim) {
+      if (rolling && !rollingAny && !cupAnim && !snapping) {
         rolling = false;
         if (callbacksRef.current.onRollComplete) {
           callbacksRef.current.onRollComplete();
@@ -246,7 +247,7 @@ export function Dice3D({ values, held, onRollComplete, onToggleHold, rollSeed = 
       },
       syncRestingValues: (vals: DiceValue[]) => {
         dice.forEach((d, i) => {
-          if (!d.resting) return;
+          if (!d.resting || d.snapping) return;
           d.targetValue = vals[i];
           d.mesh.quaternion.copy(makeUprightQuaternion(vals[i], (i - 2) * 0.06));
         });
