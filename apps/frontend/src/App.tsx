@@ -19,6 +19,7 @@ function App() {
   const multiplayer = useMultiplayerStore();
 
   const [showNewGame, setShowNewGame] = useState(false);
+  const [newGameInitialTab, setNewGameInitialTab] = useState<'local' | 'online'>('local');
   const [onlineRollSeed, setOnlineRollSeed] = useState(0);
   const prevOnlineRollsUsedRef = useRef(-1);
 
@@ -30,12 +31,23 @@ function App() {
   const [timeLeft, setTimeLeft] = useState(TURN_LIMIT);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  const [diceRolling, setDiceRolling] = useState(false);
+
   const isOnline = multiplayer.connectionState === 'connected';
-  const { isSpectator, setReady, startGame, chatMessages, sendChat } = multiplayer;
+  const { isSpectator, setReady, startGame, chatMessages, sendChat, pendingRejoinModal, rejoin, spectate, restartRoom, kickPlayer } = multiplayer;
 
   // Use online game state when connected, local otherwise
   const gameState = isOnline ? (multiplayer.gameState ?? local.gameState) : local.gameState;
   const rollSeed = isOnline ? onlineRollSeed : local.rollSeed;
+
+  // Track roll start to suppress scoreboard preview during animation
+  const prevRollSeedRef = useRef(rollSeed);
+  useEffect(() => {
+    if (prevRollSeedRef.current !== rollSeed) {
+      prevRollSeedRef.current = rollSeed;
+      setDiceRolling(true);
+    }
+  }, [rollSeed]);
 
   // Track online rolls to trigger dice animation
   useEffect(() => {
@@ -133,6 +145,15 @@ function App() {
     multiplayer.disconnect();
   };
 
+  const handlePlayAgain = () => {
+    if (multiplayer.roomId) {
+      restartRoom();
+    } else {
+      setNewGameInitialTab('local');
+      setShowNewGame(true);
+    }
+  };
+
   const handleStartLocal = (playerCount: number) => {
     local.setPlayerCount(playerCount);
     setShowNewGame(false);
@@ -161,6 +182,7 @@ function App() {
             rollsUsed={gameState.rollsUsed}
             onPick={handlePickCategory}
             gameOver={gameState.phase === 'ended'}
+            diceRolling={diceRolling}
           />
 
           <div className={styles.diceStage}>
@@ -186,7 +208,7 @@ function App() {
             <Dice3D
               values={gameState.dice}
               held={gameState.held}
-              onRollComplete={() => {}}
+              onRollComplete={() => setDiceRolling(false)}
               onToggleHold={handleToggleHold}
               rollSeed={rollSeed}
             />
@@ -206,7 +228,9 @@ function App() {
               <GameOver
                 players={gameState.players}
                 winnerId={gameState.winnerId ?? ''}
-                onPlayAgain={() => setShowNewGame(true)}
+                onPlayAgain={handlePlayAgain}
+                isOnline={isOnline}
+                isHost={!multiplayer.roomId || gameState.hostId === multiplayer.playerId}
               />
             )}
           </div>
@@ -238,6 +262,7 @@ function App() {
         <NewGameModal
           onStartLocal={handleStartLocal}
           onClose={() => setShowNewGame(false)}
+          initialTab={newGameInitialTab}
         />
       )}
 
@@ -260,6 +285,7 @@ function App() {
           onReady={setReady}
           onStart={startGame}
           onLeave={handleLeave}
+          onKick={kickPlayer}
         />
       )}
 
@@ -293,6 +319,56 @@ function App() {
           >
             나가기
           </button>
+        </div>
+      )}
+
+      {pendingRejoinModal && (
+        <div style={{
+          position: 'fixed', inset: 0,
+          background: 'rgba(0,0,0,0.55)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 3000,
+        }}>
+          <div style={{
+            background: 'var(--bg-card)',
+            border: '1px solid var(--hairline)',
+            borderRadius: '16px',
+            padding: '28px 32px',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+            minWidth: '280px',
+          }}>
+            <div style={{ fontFamily: 'var(--font-text)', fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)' }}>
+              게임 진행 중
+            </div>
+            <div style={{ fontFamily: 'var(--font-text)', fontSize: '13px', color: 'var(--text-secondary)', textAlign: 'center' }}>
+              재접속하시겠습니까, 아니면 관전하시겠습니까?
+            </div>
+            <div style={{ display: 'flex', gap: '12px', width: '100%' }}>
+              <button
+                onClick={rejoin}
+                style={{
+                  flex: 1, padding: '10px 0',
+                  background: 'var(--color-apple-blue)', color: '#fff',
+                  border: 'none', borderRadius: '10px', cursor: 'pointer',
+                  fontFamily: 'var(--font-text)', fontSize: '14px', fontWeight: 600,
+                }}
+              >
+                재참가
+              </button>
+              <button
+                onClick={spectate}
+                style={{
+                  flex: 1, padding: '10px 0',
+                  background: 'var(--bg-secondary)', color: 'var(--text-primary)',
+                  border: '1px solid var(--hairline)', borderRadius: '10px', cursor: 'pointer',
+                  fontFamily: 'var(--font-text)', fontSize: '14px', fontWeight: 600,
+                }}
+              >
+                관전하기
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

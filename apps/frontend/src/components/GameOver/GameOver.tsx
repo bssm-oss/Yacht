@@ -6,9 +6,11 @@ interface GameOverProps {
   players: Player[];
   winnerId: string;
   onPlayAgain?: () => void;
+  isOnline?: boolean;
+  isHost?: boolean;
 }
 
-export function GameOver({ players, winnerId, onPlayAgain }: GameOverProps) {
+export function GameOver({ players, winnerId, onPlayAgain, isOnline, isHost }: GameOverProps) {
   const winner = players.find((p) => p.id === winnerId);
   const totals = players.map((p) => computeTotals(p.card));
   const sorted = players
@@ -42,9 +44,13 @@ export function GameOver({ players, winnerId, onPlayAgain }: GameOverProps) {
           ))}
         </div>
 
-        <button className={styles.playAgainBtn} onClick={onPlayAgain}>
-          다시 하기
-        </button>
+        {isOnline && !isHost ? (
+          <div className={styles.waitingMsg}>호스트가 재시작하길 기다리는 중...</div>
+        ) : (
+          <button className={styles.playAgainBtn} onClick={onPlayAgain}>
+            다시 하기
+          </button>
+        )}
       </div>
     </div>
   );

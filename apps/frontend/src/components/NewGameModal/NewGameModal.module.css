@@ -341,3 +341,13 @@
   background: var(--color-apple-blue, #0071e3);
   color: #fff;
 }
+
+.roomItemSpectate {
+  color: var(--text-secondary, #6e6e73);
+  background: rgba(110, 110, 115, 0.1);
+}
+
+.roomItem:hover .roomItemSpectate {
+  background: rgba(110, 110, 115, 0.7);
+  color: #fff;
+}

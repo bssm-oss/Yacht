@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useMultiplayerStore } from '../../store/multiplayerStore';
 import type { RoomInfo } from '@shared/types/ws';
 import styles from './NewGameModal.module.css';
@@ -6,11 +6,13 @@ import styles from './NewGameModal.module.css';
 interface NewGameModalProps {
   onStartLocal: (playerCount: number) => void;
   onClose: () => void;
+  initialTab?: 'local' | 'online';
 }
 
-export function NewGameModal({ onStartLocal, onClose }: NewGameModalProps) {
-  const [tab, setTab] = useState<'local' | 'online'>('local');
+export function NewGameModal({ onStartLocal, onClose, initialTab = 'local' }: NewGameModalProps) {
+  const [tab, setTab] = useState<'local' | 'online'>(initialTab);
   const [playerCount, setPlayerCount] = useState(1);
+  const nameInputRef = useRef<HTMLInputElement>(null);
   const [onlineTab, setOnlineTab] = useState<'create' | 'join' | 'browse'>('create');
   const [playerName, setPlayerName] = useState('');
   const [roomCode, setRoomCode] = useState('');
@@ -40,7 +42,10 @@ export function NewGameModal({ onStartLocal, onClose }: NewGameModalProps) {
   };
 
   const handleJoinFromBrowse = async (targetRoomId: string) => {
-    if (!playerName.trim()) return;
+    if (!playerName.trim()) {
+      nameInputRef.current?.focus();
+      return;
+    }
     await joinRoom(targetRoomId, playerName.trim());
   };
 
@@ -145,6 +150,7 @@ export function NewGameModal({ onStartLocal, onClose }: NewGameModalProps) {
                 <div className={styles.field}>
                   <label className={styles.label}>내 이름</label>
                   <input
+                    ref={nameInputRef}
                     className={styles.input}
                     type="text"
                     value={playerName}
@@ -217,7 +223,6 @@ export function NewGameModal({ onStartLocal, onClose }: NewGameModalProps) {
                           key={room.roomId}
                           className={styles.roomItem}
                           onClick={() => handleJoinFromBrowse(room.roomId)}
-                          disabled={!playerName.trim()}
                         >
                           <div className={styles.roomItemPlayers}>
                             {room.playerCount}/{room.maxPlayers}
@@ -226,7 +231,9 @@ export function NewGameModal({ onStartLocal, onClose }: NewGameModalProps) {
                             <span className={styles.roomItemHost}>{room.hostName}의 방</span>
                             <span className={styles.roomItemCode}>{room.roomId}</span>
                           </div>
-                          <div className={styles.roomItemJoin}>참가</div>
+                          <div className={`${styles.roomItemJoin} ${room.phase === 'playing' ? styles.roomItemSpectate : ''}`}>
+                            {room.phase === 'playing' ? '관전' : '참가'}
+                          </div>
                         </button>
                       ))
                     )}

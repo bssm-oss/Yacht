@@ -29,4 +29,5 @@ export interface RoomInfo {
   playerCount: number;
   maxPlayers: number;
   isPublic: boolean;
+  phase: 'waiting' | 'playing' | 'ended';
 }

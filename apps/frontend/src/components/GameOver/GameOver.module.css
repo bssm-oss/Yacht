@@ -108,3 +108,10 @@
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 113, 227, 0.35);
 }
+
+.waitingMsg {
+  font-family: var(--font-text);
+  font-size: 13px;
+  color: var(--text-tertiary);
+  padding: 10px 0;
+}

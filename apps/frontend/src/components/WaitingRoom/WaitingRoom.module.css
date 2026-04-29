@@ -85,6 +85,12 @@
   background: rgba(0, 0, 0, 0.05);
 }
 
+.playerRowRight {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .playerName {
   display: flex;
   align-items: center;
@@ -180,5 +186,21 @@
 }
 
 .btnLeave:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.25);
+}
+
+.kickBtn {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+  border: none;
+  border-radius: 4px;
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.kickBtn:hover {
   background: rgba(239, 68, 68, 0.25);
 }

@@ -98,6 +98,27 @@ export class RoomGateway {
     this.server.to(result.roomId).emit('game:state', result.state);
   }
 
+  @SubscribeMessage('room:kick')
+  handleKick(
+    @MessageBody() data: { targetId: string },
+    @ConnectedSocket() client: Socket
+  ) {
+    const result = this.roomService.kickPlayer(client.id, data.targetId);
+    if (!result) return;
+    this.server.to(data.targetId).emit('room:kicked');
+    this.server.to(result.roomId).emit('game:state', result.state);
+  }
+
+  @SubscribeMessage('room:restart')
+  handleRestart(@ConnectedSocket() client: Socket) {
+    const result = this.roomService.restartRoom(client.id);
+    if (!result) {
+      client.emit('room:error', { message: '재시작 권한이 없거나 게임이 종료되지 않았습니다.' });
+      return;
+    }
+    this.server.to(result.roomId).emit('game:state', result.state);
+  }
+
   @SubscribeMessage('room:list')
   handleList(@ConnectedSocket() client: Socket) {
     const rooms = this.roomService.getPublicRooms();

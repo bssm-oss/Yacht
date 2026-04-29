@@ -147,6 +147,44 @@ export class RoomService {
     return { roomId, state, oldSocketId };
   }
 
+  kickPlayer(hostSocketId: string, targetId: string): { roomId: string; state: GameState } | null {
+    for (const [roomId, state] of this.rooms) {
+      if (state.hostId !== hostSocketId) continue;
+      if (state.phase !== 'waiting') return null;
+
+      const idx = state.players.findIndex((p) => p.id === targetId);
+      if (idx < 0 || targetId === hostSocketId) return null;
+
+      state.players.splice(idx, 1);
+      if (state.activePlayerIndex >= state.players.length) {
+        state.activePlayerIndex = 0;
+      }
+      return { roomId, state };
+    }
+    return null;
+  }
+
+  restartRoom(socketId: string): { roomId: string; state: GameState } | null {
+    for (const [roomId, state] of this.rooms) {
+      if (state.hostId !== socketId) continue;
+      if (state.phase !== 'ended') return null;
+
+      state.phase = 'waiting';
+      state.activePlayerIndex = 0;
+      state.dice = [1, 1, 1, 1, 1];
+      state.held = [false, false, false, false, false];
+      state.rollsUsed = 0;
+      state.winnerId = null;
+      state.players.forEach((p) => {
+        p.card = makeEmptyScorecard();
+        p.ready = false;
+      });
+
+      return { roomId, state };
+    }
+    return null;
+  }
+
   getRoom(roomId: string): GameState | undefined {
     return this.rooms.get(roomId);
   }
@@ -173,8 +211,8 @@ export class RoomService {
         return { roomId, state };
       }
 
-      // waiting 중 host가 나가면 다음 플레이어에게 host 이전
-      if (state.phase === 'waiting' && state.hostId === socketId && state.players.length > 0) {
+      // host가 나가면 다음 플레이어에게 host 이전
+      if (state.hostId === socketId && state.players.length > 0) {
         state.hostId = state.players[0].id;
         state.hostName = state.players[0].name;
       }
@@ -201,13 +239,14 @@ export class RoomService {
   getPublicRooms(): RoomInfo[] {
     const rooms: RoomInfo[] = [];
     for (const [, state] of this.rooms) {
-      if (state.isPublic && state.phase === 'waiting') {
+      if (state.isPublic && (state.phase === 'waiting' || state.phase === 'playing')) {
         rooms.push({
           roomId: state.roomId,
           hostName: state.hostName,
           playerCount: state.players.length,
           maxPlayers: state.maxPlayers,
           isPublic: state.isPublic,
+          phase: state.phase,
         });
       }
     }

@@ -23,6 +23,7 @@ export interface MultiplayerStore {
   publicRooms: RoomInfo[];
   isSpectator: boolean;
   chatMessages: ChatMessage[];
+  pendingRejoinModal: boolean;
 
   createRoom: (playerName: string, maxPlayers: number, isPublic: boolean) => Promise<void>;
   joinRoom: (roomId: string, playerName: string) => Promise<void>;
@@ -34,6 +35,10 @@ export interface MultiplayerStore {
   setReady: (ready: boolean) => void;
   startGame: () => void;
   sendChat: (message: string) => void;
+  rejoin: () => void;
+  spectate: () => void;
+  restartRoom: () => void;
+  kickPlayer: (targetId: string) => void;
 }
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3001';
@@ -49,6 +54,7 @@ export const useMultiplayerStore = create<MultiplayerStore>((set, get) => ({
   publicRooms: [],
   isSpectator: false,
   chatMessages: [],
+  pendingRejoinModal: false,
 
   createRoom: async (playerName: string, maxPlayers: number, isPublic: boolean) => {
     set({ connectionState: 'connecting', error: null });
@@ -81,12 +87,22 @@ export const useMultiplayerStore = create<MultiplayerStore>((set, get) => ({
     });
 
     socket.on('room:error', (data: { message: string }) => {
-      set({ error: data.message, connectionState: 'disconnected' });
+      const { connectionState } = get();
+      if (connectionState !== 'connected') {
+        set({ error: data.message, connectionState: 'disconnected' });
+        socket.disconnect();
+      } else {
+        set({ error: data.message });
+      }
+    });
+
+    socket.on('room:kicked', () => {
       socket.disconnect();
+      set({ socket: null, roomId: null, playerId: null, myName: null, connectionState: 'disconnected', gameState: null, error: '방장에 의해 강퇴되었습니다.', isSpectator: false, chatMessages: [], pendingRejoinModal: false });
     });
 
     socket.on('game:state', (state: GameState) => {
-      set({ gameState: state });
+      set({ gameState: state, ...(state.phase !== 'playing' ? { pendingRejoinModal: false } : {}) });
     });
 
     socket.on('chat:message', (msg: ChatMessage) => {
@@ -110,10 +126,14 @@ export const useMultiplayerStore = create<MultiplayerStore>((set, get) => ({
     });
 
     socket.io.on('reconnect', () => {
-      const { roomId: currentRoomId, myName: currentName, isSpectator } = get();
+      const { roomId: currentRoomId, myName: currentName, isSpectator, gameState } = get();
       if (currentRoomId && currentName && !isSpectator) {
         set({ playerId: socket.id });
-        socket.emit('room:rejoin', { roomId: currentRoomId, playerName: currentName });
+        if (gameState?.phase === 'playing') {
+          set({ pendingRejoinModal: true });
+        } else {
+          socket.emit('room:rejoin', { roomId: currentRoomId, playerName: currentName });
+        }
       }
     });
   },
@@ -149,12 +169,22 @@ export const useMultiplayerStore = create<MultiplayerStore>((set, get) => ({
     });
 
     socket.on('room:error', (data: { message: string }) => {
-      set({ error: data.message, connectionState: 'disconnected' });
+      const { connectionState } = get();
+      if (connectionState !== 'connected') {
+        set({ error: data.message, connectionState: 'disconnected' });
+        socket.disconnect();
+      } else {
+        set({ error: data.message });
+      }
+    });
+
+    socket.on('room:kicked', () => {
       socket.disconnect();
+      set({ socket: null, roomId: null, playerId: null, myName: null, connectionState: 'disconnected', gameState: null, error: '방장에 의해 강퇴되었습니다.', isSpectator: false, chatMessages: [], pendingRejoinModal: false });
     });
 
     socket.on('game:state', (state: GameState) => {
-      set({ gameState: state });
+      set({ gameState: state, ...(state.phase !== 'playing' ? { pendingRejoinModal: false } : {}) });
     });
 
     socket.on('chat:message', (msg: ChatMessage) => {
@@ -178,10 +208,14 @@ export const useMultiplayerStore = create<MultiplayerStore>((set, get) => ({
     });
 
     socket.io.on('reconnect', () => {
-      const { roomId: currentRoomId, myName: currentName, isSpectator } = get();
+      const { roomId: currentRoomId, myName: currentName, isSpectator, gameState } = get();
       if (currentRoomId && currentName && !isSpectator) {
         set({ playerId: socket.id });
-        socket.emit('room:rejoin', { roomId: currentRoomId, playerName: currentName });
+        if (gameState?.phase === 'playing') {
+          set({ pendingRejoinModal: true });
+        } else {
+          socket.emit('room:rejoin', { roomId: currentRoomId, playerName: currentName });
+        }
       }
     });
   },
@@ -201,7 +235,38 @@ export const useMultiplayerStore = create<MultiplayerStore>((set, get) => ({
       error: null,
       isSpectator: false,
       chatMessages: [],
+      pendingRejoinModal: false,
     });
+  },
+
+  rejoin: () => {
+    const { socket, roomId, myName } = get();
+    if (socket && roomId && myName) {
+      set({ pendingRejoinModal: false });
+      socket.emit('room:rejoin', { roomId, playerName: myName });
+    }
+  },
+
+  spectate: () => {
+    const { socket, roomId, myName } = get();
+    if (socket && roomId && myName) {
+      set({ pendingRejoinModal: false, isSpectator: true });
+      socket.emit('room:join', { roomId, playerName: myName });
+    }
+  },
+
+  restartRoom: () => {
+    const { socket } = get();
+    if (socket) {
+      socket.emit('room:restart');
+    }
+  },
+
+  kickPlayer: (targetId: string) => {
+    const { socket } = get();
+    if (socket) {
+      socket.emit('room:kick', { targetId });
+    }
   },
 
   roll: () => {

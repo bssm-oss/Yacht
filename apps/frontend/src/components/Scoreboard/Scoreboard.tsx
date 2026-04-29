@@ -10,9 +10,10 @@ interface ScoreboardProps {
   rollsUsed: number;
   onPick?: (categoryId: keyof Scorecard) => void;
   gameOver?: boolean;
+  diceRolling?: boolean;
 }
 
-export function Scoreboard({ players, activeIdx, diceValues, rollsUsed, onPick, gameOver }: ScoreboardProps) {
+export function Scoreboard({ players, activeIdx, diceValues, rollsUsed, onPick, gameOver, diceRolling }: ScoreboardProps) {
   const totals = players.map((p) => computeTotals(p.card));
 
   const previewFor = (catId: keyof Scorecard): number => {
@@ -55,6 +56,7 @@ export function Scoreboard({ players, activeIdx, diceValues, rollsUsed, onPick, 
                 rollsUsed={rollsUsed}
                 onPick={onPick}
                 gameOver={gameOver}
+                diceRolling={diceRolling}
               />
             ))}
             <tr className={styles.bonusRow}>
@@ -96,6 +98,7 @@ export function Scoreboard({ players, activeIdx, diceValues, rollsUsed, onPick, 
                 rollsUsed={rollsUsed}
                 onPick={onPick}
                 gameOver={gameOver}
+                diceRolling={diceRolling}
               />
             ))}
           </tbody>
@@ -128,6 +131,7 @@ interface RowProps {
   rollsUsed: number;
   onPick?: (categoryId: keyof Scorecard) => void;
   gameOver?: boolean;
+  diceRolling?: boolean;
 }
 
 const CATEGORY_LABELS: Record<keyof Scorecard, { label: string; help: string }> = {
@@ -145,7 +149,7 @@ const CATEGORY_LABELS: Record<keyof Scorecard, { label: string; help: string }> 
   yacht: { label: '요트', help: '전부 같은 눈 → 50점' },
 };
 
-function Row({ catId, players, activeIdx, preview, rollsUsed, onPick, gameOver }: RowProps) {
+function Row({ catId, players, activeIdx, preview, rollsUsed, onPick, gameOver, diceRolling }: RowProps) {
   const cat = CATEGORY_LABELS[catId];
 
   return (
@@ -159,8 +163,8 @@ function Row({ catId, players, activeIdx, preview, rollsUsed, onPick, gameOver }
       {players.map((p, i) => {
         const v = p.card[catId];
         const isActive = i === activeIdx && !gameOver;
-        const canPick = isActive && rollsUsed > 0 && v == null;
-        const showPreview = isActive && rollsUsed > 0 && v == null;
+        const canPick = isActive && rollsUsed > 0 && v == null && !diceRolling;
+        const showPreview = isActive && rollsUsed > 0 && v == null && !diceRolling;
 
         return (
           <td

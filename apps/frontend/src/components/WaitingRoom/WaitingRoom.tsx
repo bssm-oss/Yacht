@@ -7,12 +7,14 @@ interface WaitingRoomProps {
   onReady: (ready: boolean) => void;
   onStart: () => void;
   onLeave: () => void;
+  onKick?: (targetId: string) => void;
 }
 
-export function WaitingRoom({ gameState, playerId, onReady, onStart, onLeave }: WaitingRoomProps) {
+export function WaitingRoom({ gameState, playerId, onReady, onStart, onLeave, onKick }: WaitingRoomProps) {
   const isHost = gameState.hostId === playerId;
   const me = gameState.players.find((p) => p.id === playerId);
-  const allReady = gameState.players.length >= 2 && gameState.players.every((p) => p.ready);
+  const connectedPlayers = gameState.players.filter((p) => p.connected);
+  const allReady = connectedPlayers.length >= 2 && connectedPlayers.every((p) => p.ready);
 
   const handleCopyCode = () => {
     navigator.clipboard.writeText(gameState.roomId).catch(() => {});
@@ -31,11 +33,11 @@ export function WaitingRoom({ gameState, playerId, onReady, onStart, onLeave }: 
         </div>
 
         <div className={styles.playerCountLine}>
-          {gameState.players.length} / {gameState.maxPlayers}명
+          {connectedPlayers.length} / {gameState.maxPlayers}명
         </div>
 
         <ul className={styles.playerList}>
-          {gameState.players.map((player) => (
+          {connectedPlayers.map((player) => (
             <li key={player.id} className={styles.playerRow}>
               <span className={styles.playerName}>
                 {player.name}
@@ -43,11 +45,22 @@ export function WaitingRoom({ gameState, playerId, onReady, onStart, onLeave }: 
                   <span className={styles.hostBadge}>방장</span>
                 )}
               </span>
-              <span
-                className={`${styles.readyBadge} ${player.ready ? styles.readyBadgeGreen : styles.readyBadgeGray}`}
-              >
-                {player.ready ? '준비완료' : '대기중'}
-              </span>
+              <div className={styles.playerRowRight}>
+                <span
+                  className={`${styles.readyBadge} ${player.ready ? styles.readyBadgeGreen : styles.readyBadgeGray}`}
+                >
+                  {player.ready ? '준비완료' : '대기중'}
+                </span>
+                {isHost && player.id !== playerId && onKick && (
+                  <button
+                    className={styles.kickBtn}
+                    onClick={() => onKick(player.id)}
+                    title="강퇴"
+                  >
+                    강퇴
+                  </button>
+                )}
+              </div>
             </li>
           ))}
         </ul>
