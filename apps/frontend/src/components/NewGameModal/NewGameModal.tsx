@@ -7,15 +7,17 @@ interface NewGameModalProps {
   onStartLocal: (playerCount: number) => void;
   onClose: () => void;
   initialTab?: 'local' | 'online';
+  /** Pre-fill the room code field for URL-based join/reconnect */
+  prefillRoomCode?: string;
 }
 
-export function NewGameModal({ onStartLocal, onClose, initialTab = 'local' }: NewGameModalProps) {
+export function NewGameModal({ onStartLocal, onClose, initialTab = 'local', prefillRoomCode }: NewGameModalProps) {
   const [tab, setTab] = useState<'local' | 'online'>(initialTab);
   const [playerCount, setPlayerCount] = useState(1);
   const nameInputRef = useRef<HTMLInputElement>(null);
-  const [onlineTab, setOnlineTab] = useState<'create' | 'join' | 'browse'>('create');
+  const [onlineTab, setOnlineTab] = useState<'create' | 'join' | 'browse'>(prefillRoomCode ? 'join' : 'create');
   const [playerName, setPlayerName] = useState('');
-  const [roomCode, setRoomCode] = useState('');
+  const [roomCode, setRoomCode] = useState(prefillRoomCode ?? '');
   const [copied, setCopied] = useState(false);
   const [maxPlayers, setMaxPlayers] = useState(4);
   const [isPublic, setIsPublic] = useState(true);

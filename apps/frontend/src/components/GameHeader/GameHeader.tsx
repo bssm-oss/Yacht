@@ -9,6 +9,8 @@ interface GameHeaderProps {
   roomId?: string | null;
   onNewGame?: () => void;
   onLeave?: () => void;
+  /** Copy the room share URL to the clipboard */
+  onCopyRoomLink?: () => void;
 }
 
 export function GameHeader({
@@ -19,6 +21,7 @@ export function GameHeader({
   roomId,
   onNewGame,
   onLeave,
+  onCopyRoomLink,
 }: GameHeaderProps) {
 
   return (
@@ -34,7 +37,22 @@ export function GameHeader({
           <span className={styles.title}>BSSM-Yacht</span>
         </div>
         {isOnline && roomId && (
-          <span className={styles.roomBadge}>방 코드: {roomId}</span>
+          <>
+            <span className={styles.roomBadge}>방 코드: {roomId}</span>
+            {onCopyRoomLink && (
+              <button
+                className={styles.copyLinkBtn}
+                onClick={onCopyRoomLink}
+                title="방 링크 복사"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" />
+                  <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" />
+                </svg>
+                링크 복사
+              </button>
+            )}
+          </>
         )}
       </div>
 

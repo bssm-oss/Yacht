@@ -122,3 +122,23 @@
 .leaveBtn:hover {
   background: rgba(255, 59, 48, 0.08);
 }
+
+.copyLinkBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-text);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-apple-blue, #007aff);
+  background: rgba(0, 122, 255, 0.08);
+  border: none;
+  padding: 3px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.copyLinkBtn:hover {
+  background: rgba(0, 122, 255, 0.16);
+}
