@@ -8,9 +8,9 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
   private readonly logger = new Logger(PrismaService.name);
 
   constructor() {
-    const url = new URL(process.env.DATABASE_URL!);
-    url.searchParams.set('sslmode', 'disable');
-    const adapter = new PrismaPg({ connectionString: url.toString() });
+    const adapter = new PrismaPg({
+      connectionString: process.env.DATABASE_URL!,
+    });
     super({ adapter } as ConstructorParameters<typeof PrismaClient>[0]);
   }
 
