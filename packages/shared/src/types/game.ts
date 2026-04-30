@@ -69,4 +69,6 @@ export interface GameState {
   isPublic: boolean;
   hostName: string;
   hostId: string;
+  /** Seed for deterministic dice physics (multiplayer) */
+  rollSeed?: number;
 }
