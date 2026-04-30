@@ -37,6 +37,8 @@ interface GameStore {
   setMood: (mood: 'soft' | 'warm' | 'cool') => void;
   setShowHints: (show: boolean) => void;
   onRollComplete: () => void;
+  /** 물리 엔진 결과를 실제 주사위 값으로 반영 (로컬 플레이 전용) */
+  setDiceFromPhysics: (values: DiceValue[]) => void;
 }
 
 function createInitialState(playerCount: number): GameState {
@@ -173,5 +175,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
   onRollComplete: () => {
     // Called by Dice3D when animation finishes
     // State is already updated; this is for any post-roll logic
+  },
+
+  setDiceFromPhysics: (values: DiceValue[]) => {
+    const state = get().gameState;
+    if (state.phase !== 'playing' || state.rollsUsed === 0) return;
+    // 홀드된 주사위는 현재 값 유지, 그 외는 물리 결과로 교체
+    const dice = state.dice.map((v, i) => (state.held[i] ? v : values[i])) as DiceValue[];
+    set({ gameState: { ...state, dice } });
   },
 }));

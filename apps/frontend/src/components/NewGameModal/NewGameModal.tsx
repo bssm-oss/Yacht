@@ -7,20 +7,22 @@ interface NewGameModalProps {
   onStartLocal: (playerCount: number) => void;
   onClose: () => void;
   initialTab?: 'local' | 'online';
+  /** Pre-fill the room code field for URL-based join/reconnect */
+  prefillRoomCode?: string;
 }
 
-export function NewGameModal({ onStartLocal, onClose, initialTab = 'local' }: NewGameModalProps) {
+export function NewGameModal({ onStartLocal, onClose, initialTab = 'local', prefillRoomCode }: NewGameModalProps) {
   const [tab, setTab] = useState<'local' | 'online'>(initialTab);
   const [playerCount, setPlayerCount] = useState(1);
   const nameInputRef = useRef<HTMLInputElement>(null);
-  const [onlineTab, setOnlineTab] = useState<'create' | 'join' | 'browse'>('create');
+  const [onlineTab, setOnlineTab] = useState<'create' | 'join' | 'browse'>(prefillRoomCode ? 'join' : 'create');
   const [playerName, setPlayerName] = useState('');
-  const [roomCode, setRoomCode] = useState('');
+  const [roomCode, setRoomCode] = useState(prefillRoomCode ?? '');
   const [copied, setCopied] = useState(false);
   const [maxPlayers, setMaxPlayers] = useState(4);
   const [isPublic, setIsPublic] = useState(true);
 
-  const { createRoom, joinRoom, disconnect, roomId, connectionState, error, fetchPublicRooms, publicRooms } =
+  const { createRoom, joinRoom, disconnect, restartRoom, roomId, playerId, connectionState, error, fetchPublicRooms, publicRooms, gameState } =
     useMultiplayerStore();
 
   const isConnected = connectionState === 'connected' && roomId;
@@ -116,9 +118,15 @@ export function NewGameModal({ onStartLocal, onClose, initialTab = 'local' }: Ne
                 </div>
                 <div className={styles.connectedBadge}>연결됨 ✓</div>
                 <div className={styles.btnRow}>
-                  <button className={styles.primaryBtn} onClick={onClose}>
-                    게임으로
-                  </button>
+                  {gameState?.phase === 'ended' && gameState?.hostId === playerId ? (
+                    <button className={styles.primaryBtn} onClick={() => { restartRoom(); }}>
+                      🔄 새 게임 시작
+                    </button>
+                  ) : (
+                    <button className={styles.primaryBtn} onClick={onClose}>
+                      게임으로
+                    </button>
+                  )}
                   <button className={styles.dangerBtn} onClick={handleLeaveRoom}>
                     방 나가기
                   </button>
@@ -215,27 +223,34 @@ export function NewGameModal({ onStartLocal, onClose, initialTab = 'local' }: Ne
 
                 {onlineTab === 'browse' && (
                   <div className={styles.roomList}>
+                    {!playerName.trim() && (
+                      <div className={styles.browseHint}>이름을 먼저 입력해야 참가할 수 있습니다</div>
+                    )}
                     {publicRooms.length === 0 ? (
                       <div className={styles.emptyRooms}>참가 가능한 공개방이 없습니다</div>
                     ) : (
-                      publicRooms.map((room: RoomInfo) => (
-                        <button
-                          key={room.roomId}
-                          className={styles.roomItem}
-                          onClick={() => handleJoinFromBrowse(room.roomId)}
-                        >
-                          <div className={styles.roomItemPlayers}>
-                            {room.playerCount}/{room.maxPlayers}
-                          </div>
-                          <div className={styles.roomItemInfo}>
-                            <span className={styles.roomItemHost}>{room.hostName}의 방</span>
-                            <span className={styles.roomItemCode}>{room.roomId}</span>
-                          </div>
-                          <div className={`${styles.roomItemJoin} ${room.phase === 'playing' ? styles.roomItemSpectate : ''}`}>
-                            {room.phase === 'playing' ? '관전' : '참가'}
-                          </div>
-                        </button>
-                      ))
+                      publicRooms.map((room: RoomInfo) => {
+                        const isJoinable = room.phase === 'waiting' && room.playerCount < room.maxPlayers;
+                        return (
+                          <button
+                            key={room.roomId}
+                            className={styles.roomItem}
+                            onClick={() => handleJoinFromBrowse(room.roomId)}
+                            disabled={isJoinable && !playerName.trim()}
+                          >
+                            <div className={styles.roomItemPlayers}>
+                              {room.playerCount}/{room.maxPlayers}
+                            </div>
+                            <div className={styles.roomItemInfo}>
+                              <span className={styles.roomItemHost}>{room.hostName}의 방</span>
+                              <span className={styles.roomItemCode}>{room.roomId}</span>
+                            </div>
+                            <div className={`${styles.roomItemJoin} ${room.phase === 'playing' ? styles.roomItemSpectate : ''}`}>
+                              {room.phase === 'playing' ? '관전' : '참가'}
+                            </div>
+                          </button>
+                        );
+                      })
                     )}
                   </div>
                 )}

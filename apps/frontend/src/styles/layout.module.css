@@ -24,12 +24,48 @@
   overflow: hidden;
 }
 
-.rollBtn {
+/* ── 파워 게이지 래퍼 ─────────────────────────────── */
+.rollArea {
   position: absolute;
-  bottom: 20px;
+  bottom: 16px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-width: 160px;
+}
+
+/* 파워 게이지 바 */
+.powerGauge {
+  width: 100%;
+  height: 8px;
+  background: rgba(0,0,0,0.12);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.powerFill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.04s linear, background 0.15s ease;
+}
+
+.powerLabel {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 9px;
+  font-weight: 700;
+  color: rgba(0,0,0,0.5);
+  pointer-events: none;
+}
+
+.rollBtn {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -43,7 +79,9 @@
   border-radius: var(--radius-pill);
   cursor: pointer;
   box-shadow: 0 4px 12px rgba(0, 113, 227, 0.35);
-  transition: box-shadow 0.15s ease, opacity 0.15s ease;
+  transition: box-shadow 0.15s ease, opacity 0.15s ease, transform 0.08s ease;
+  user-select: none;
+  touch-action: none;
 }
 
 .rollBtn:hover {
@@ -51,8 +89,9 @@
   opacity: 0.95;
 }
 
-.rollBtn:active {
-  opacity: 0.9;
+.rollBtnPressing {
+  transform: scale(0.95);
+  box-shadow: 0 2px 6px rgba(0, 113, 227, 0.5);
 }
 
 .rollBtn:disabled {

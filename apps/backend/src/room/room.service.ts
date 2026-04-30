@@ -169,7 +169,8 @@ export class RoomService {
       if (state.hostId !== socketId) continue;
       if (state.phase !== 'ended') return null;
 
-      state.phase = 'waiting';
+      // 즉시 playing 상태로 전환 – WaitingRoom 재진입 없이 바로 새 게임 시작
+      state.phase = 'playing';
       state.activePlayerIndex = 0;
       state.dice = [1, 1, 1, 1, 1];
       state.held = [false, false, false, false, false];
@@ -177,7 +178,8 @@ export class RoomService {
       state.winnerId = null;
       state.players.forEach((p) => {
         p.card = makeEmptyScorecard();
-        p.ready = false;
+        p.ready = true;
+        p.connected = true;
       });
 
       return { roomId, state };

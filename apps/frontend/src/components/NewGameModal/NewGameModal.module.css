@@ -351,3 +351,14 @@
   background: rgba(110, 110, 115, 0.7);
   color: #fff;
 }
+
+.browseHint {
+  font-size: 12px;
+  color: var(--color-apple-orange, #ff9500);
+  background: rgba(255, 149, 0, 0.08);
+  border: 1px solid rgba(255, 149, 0, 0.2);
+  border-radius: 8px;
+  padding: 8px 12px;
+  text-align: center;
+  margin-bottom: 4px;
+}

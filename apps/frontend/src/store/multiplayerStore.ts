@@ -293,6 +293,10 @@ export const useMultiplayerStore = create<MultiplayerStore>((set, get) => ({
   fetchPublicRooms: () => {
     const { socket } = get();
     if (socket && socket.connected) {
+      // 기존 연결된 소켓에는 room:list 리스너가 없으므로 one-time 리스너 등록 후 요청
+      socket.once('room:list', (data: { rooms: RoomInfo[] }) => {
+        set({ publicRooms: data.rooms });
+      });
       socket.emit('room:list');
       return;
     }
