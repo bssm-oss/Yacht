@@ -140,14 +140,21 @@ export function stepPhysics(
     const onFloor = Math.abs(d.pos.y - FLOOR_Y) < 0.05;
     if (onFloor && d.vel.length() < 0.4 && d.ang.length() < 0.7) {
       d.settleT += dt;
+
+      // Gradually align to nearest flat face so die never rests on an edge
+      const faceValue = readFaceUp(d.mesh);
+      const targetQ = makeUprightQuaternion(faceValue, 0);
+      const progress = Math.min(1, d.settleT / 0.18);
+      d.mesh.quaternion.slerp(targetQ, progress * 0.25);
+      d.ang.multiplyScalar(0.85);
+
       if (d.settleT > 0.18) {
         d.resting = true;
         d.settleT = 0;
-        // 물리 엔진 결과를 그대로 사용 – 스냅/보간 없음
+        d.mesh.quaternion.copy(targetQ);
         if (onSettle) {
           const diceIdx = (dice as DiceBody[]).indexOf(d);
-          const physicsValue = readFaceUp(d.mesh);
-          onSettle(diceIdx, physicsValue);
+          onSettle(diceIdx, faceValue);
         }
       }
     } else {

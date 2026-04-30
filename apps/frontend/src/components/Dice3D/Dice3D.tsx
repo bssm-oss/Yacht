@@ -172,20 +172,13 @@ export function Dice3D({ values, held, onRollComplete, onPhysicsResult, onToggle
         }
 
         if (wasHeld && !isHeld && !d.inCup) {
-          // Just un-held: free slot and launch back to roll zone
+          // Un-held without a new roll: keep value, don't re-roll
           dieToSlot[i] = -1;
-          d.resting = false;
+          d.resting = true;
+          d.vel.set(0, 0, 0);
+          d.ang.set(0, 0, 0);
           d.settleT = 0;
-          d.vel.set(
-            (Math.random() - 0.5) * 1.5,
-            2.0,
-            3.5 + Math.random() * 1.5
-          );
-          d.ang.set(
-            (Math.random() - 0.5) * 10,
-            (Math.random() - 0.5) * 10,
-            (Math.random() - 0.5) * 10
-          );
+          d.mesh.quaternion.copy(makeUprightQuaternion(d.targetValue, 0));
         }
 
         if (isHeld && !d.inCup) {
