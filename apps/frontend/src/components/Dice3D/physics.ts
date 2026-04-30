@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import type { DiceValue } from '@shared/types/game';
 import { TRAY, HOLD_SLOTS } from './tray';
 import { CUP } from './cup';
-import { makeUprightQuaternion, createDieMesh } from './dieMesh';
+import { readFaceUp, makeUprightQuaternion, createDieMesh } from './dieMesh';
 
 export const HALF = 0.24;
 export const FLOOR_Y = TRAY.floorY + HALF;
@@ -25,6 +25,7 @@ export interface DiceBody {
   held: boolean;
   targetValue: DiceValue;
   settleT: number;
+  /** @deprecated 스냅 보간 제거됨 – 호환성을 위해 유지 */
   snapping: boolean;
   snapT: number;
   snapStartQ: THREE.Quaternion;
@@ -80,7 +81,14 @@ export function layoutInTray(dice: DiceBody[], values: DiceValue[]) {
   });
 }
 
-export function stepPhysics(dice: DiceBody[], dt: number): boolean {
+/**
+ * @param onSettle - 개별 주사위가 착지하면 호출됨 (dieIndex, physicsValue)
+ */
+export function stepPhysics(
+  dice: DiceBody[],
+  dt: number,
+  onSettle?: (index: number, value: DiceValue) => void,
+): boolean {
   let rollingAny = false;
 
   for (const d of dice) {
@@ -135,11 +143,12 @@ export function stepPhysics(dice: DiceBody[], dt: number): boolean {
       if (d.settleT > 0.18) {
         d.resting = true;
         d.settleT = 0;
-        const yaw = (Math.random() - 0.5) * 0.4;
-        d.snapping = true;
-        d.snapT = 0;
-        d.snapStartQ.copy(d.mesh.quaternion);
-        d.snapTargetQ.copy(makeUprightQuaternion(d.targetValue, yaw));
+        // 물리 엔진 결과를 그대로 사용 – 스냅/보간 없음
+        if (onSettle) {
+          const diceIdx = (dice as DiceBody[]).indexOf(d);
+          const physicsValue = readFaceUp(d.mesh);
+          onSettle(diceIdx, physicsValue);
+        }
       }
     } else {
       d.settleT = 0;
@@ -149,22 +158,9 @@ export function stepPhysics(dice: DiceBody[], dt: number): boolean {
   return rollingAny;
 }
 
-export function stepSnap(dice: DiceBody[], dt: number): boolean {
-  let anySnapping = false;
-  for (const d of dice) {
-    if (!d.snapping) continue;
-    anySnapping = true;
-    d.snapT += dt;
-    const t = Math.min(1, d.snapT / 0.35);
-    // easeInOutQuad
-    const eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
-    d.mesh.quaternion.slerpQuaternions(d.snapStartQ, d.snapTargetQ, eased);
-    if (t >= 1) {
-      d.snapping = false;
-      d.mesh.quaternion.copy(d.snapTargetQ);
-    }
-  }
-  return anySnapping;
+// 스냅 보간 제거 – 항상 false 반환 (호환성 유지)
+export function stepSnap(_dice: DiceBody[], _dt: number): boolean {
+  return false;
 }
 
 export function resolveCollisions(dice: DiceBody[]) {

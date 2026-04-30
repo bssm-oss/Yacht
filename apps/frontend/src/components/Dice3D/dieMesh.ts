@@ -111,6 +111,37 @@ export function makeUprightQuaternion(value: number, spinY = 0): THREE.Quaternio
   return q.premultiply(yaw);
 }
 
+/**
+ * 현재 쿼터니언에서 윗면 값을 계산합니다.
+ * FACE_VALUES = [1,6,2,5,3,4] → +X,-X,+Y,-Y,+Z,-Z
+ */
+export function readFaceUp(mesh: THREE.Mesh): DiceValue {
+  // 월드 UP 벡터를 로컬 공간으로 변환
+  const worldUp = new THREE.Vector3(0, 1, 0);
+  const localUp = worldUp.clone().applyQuaternion(mesh.quaternion.clone().invert());
+
+  // 로컬 UP과 가장 가까운 면 방향 탐색
+  const axes: THREE.Vector3[] = [
+    new THREE.Vector3(1, 0, 0),   // +X → 1
+    new THREE.Vector3(-1, 0, 0),  // -X → 6
+    new THREE.Vector3(0, 1, 0),   // +Y → 2
+    new THREE.Vector3(0, -1, 0),  // -Y → 5
+    new THREE.Vector3(0, 0, 1),   // +Z → 3
+    new THREE.Vector3(0, 0, -1),  // -Z → 4
+  ];
+
+  let bestDot = -Infinity;
+  let bestIdx = 2; // 기본값: 2면(+Y)
+  for (let i = 0; i < axes.length; i++) {
+    const dot = localUp.dot(axes[i]);
+    if (dot > bestDot) {
+      bestDot = dot;
+      bestIdx = i;
+    }
+  }
+  return FACE_VALUES[bestIdx];
+}
+
 export function createDieMesh(): THREE.Mesh {
   const HALF = 0.24;
   const size = HALF * 2;

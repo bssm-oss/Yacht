@@ -3,9 +3,10 @@ import * as THREE from 'three';
 import type { DiceValue } from '@shared/types/game';
 import { createTray, createGroundShadow, HOLD_SLOTS } from './tray';
 import { createCup, CUP } from './cup';
-import { createDice, layoutInTray, stepPhysics, stepSnap, resolveCollisions, HALF, DiceBody } from './physics';
+import { createDice, layoutInTray, stepPhysics, resolveCollisions, HALF, DiceBody } from './physics';
 import { makeUprightQuaternion } from './dieMesh';
 import { updateCupShake, CupAnimation } from './cupAnimation';
+import { mulberry32 } from '../../utils/prng';
 
 import styles from './Dice3D.module.css';
 
@@ -13,8 +14,12 @@ interface Dice3DProps {
   values: DiceValue[];
   held: boolean[];
   onRollComplete?: () => void;
+  /** 로컬 플레이 전용: 물리 엔진이 결정한 면 값 배열을 반환 */
+  onPhysicsResult?: (values: DiceValue[]) => void;
   onToggleHold?: (index: number) => void;
   rollSeed?: number;
+  /** 파워 게이지 강도 0~1 */
+  rollPower?: number;
 }
 
 interface ScreenPos {
@@ -22,19 +27,23 @@ interface ScreenPos {
   y: number;
 }
 
-export function Dice3D({ values, held, onRollComplete, onToggleHold, rollSeed = 0 }: Dice3DProps) {
+export function Dice3D({ values, held, onRollComplete, onPhysicsResult, onToggleHold, rollSeed = 0, rollPower = 0.5 }: Dice3DProps) {
   const mountRef = useRef<HTMLDivElement>(null);
   const [dicePositions, setDicePositions] = useState<ScreenPos[]>([]);
   const [isRolling, setIsRolling] = useState(false);
 
   const valuesRef = useRef(values);
   const heldRef = useRef(held);
-  const callbacksRef = useRef({ onRollComplete, onToggleHold });
+  const rollPowerRef = useRef(rollPower);
+  const rollSeedRef = useRef(rollSeed);
+  const callbacksRef = useRef({ onRollComplete, onPhysicsResult, onToggleHold });
   const diceRef = useRef<DiceBody[]>([]);
 
   useEffect(() => { valuesRef.current = values; }, [values]);
   useEffect(() => { heldRef.current = held; }, [held]);
-  useEffect(() => { callbacksRef.current = { onRollComplete, onToggleHold }; }, [onRollComplete, onToggleHold]);
+  useEffect(() => { rollPowerRef.current = rollPower; }, [rollPower]);
+  useEffect(() => { rollSeedRef.current = rollSeed; }, [rollSeed]);
+  useEffect(() => { callbacksRef.current = { onRollComplete, onPhysicsResult, onToggleHold }; }, [onRollComplete, onPhysicsResult, onToggleHold]);
 
   useEffect(() => {
     const mount = mountRef.current;
@@ -122,6 +131,7 @@ export function Dice3D({ values, held, onRollComplete, onToggleHold, rollSeed = 
     let lastT = performance.now();
     let rolling = false;
     let cupAnim: CupAnimation | null = null;
+    let rollRng: (() => number) | undefined = undefined;
     let prevHeld = new Array(5).fill(false);
 
     // dieToSlot[i] = which hold slot die i occupies (-1 = none)
@@ -133,9 +143,9 @@ export function Dice3D({ values, held, onRollComplete, onToggleHold, rollSeed = 
       lastT = now;
 
       if (cupAnim) {
-        const result = updateCupShake(cupGroup, cupAnim, dt, dice, valuesRef.current);
+        const result = updateCupShake(cupGroup, cupAnim, dt, dice, valuesRef.current, rollRng);
         if (result.diceReleased && !rolling) rolling = true;
-        if (result.finished) cupAnim = null;
+        if (result.finished) { cupAnim = null; rollRng = undefined; }
       }
 
       const heldArr = heldRef.current;
@@ -196,11 +206,22 @@ export function Dice3D({ values, held, onRollComplete, onToggleHold, rollSeed = 
 
       prevHeld = [...(heldArr ?? new Array(5).fill(false))];
 
-      const rollingAny = stepPhysics(dice, dt);
-      resolveCollisions(dice);
-      const snapping = stepSnap(dice, dt);
+      // 물리 착지 콜백: 각 주사위가 멈추면 물리 결과 면 값을 수집
+      const settledValues: (DiceValue | null)[] = new Array(5).fill(null);
+      const rollingAny = stepPhysics(dice, dt, (idx, physVal) => {
+        settledValues[idx] = physVal;
+      });
 
-      if (rolling && !rollingAny && !cupAnim && !snapping) {
+      // 착지된 주사위가 있으면 결과 전달
+      const hasSettled = settledValues.some((v) => v !== null);
+      if (hasSettled && callbacksRef.current.onPhysicsResult) {
+        const full = dice.map((d, i) => settledValues[i] ?? d.targetValue) as DiceValue[];
+        callbacksRef.current.onPhysicsResult(full);
+      }
+
+      resolveCollisions(dice);
+
+      if (rolling && !rollingAny && !cupAnim) {
         rolling = false;
         if (callbacksRef.current.onRollComplete) {
           callbacksRef.current.onRollComplete();
@@ -224,8 +245,14 @@ export function Dice3D({ values, held, onRollComplete, onToggleHold, rollSeed = 
     raf = requestAnimationFrame(tick);
 
     (Dice3D as unknown as { api: Dice3DAPI }).api = {
-      startRoll: (targetValues: DiceValue[], heldArr: boolean[]) => {
-        cupAnim = { t: 0, duration: 1.2, spilled: false, phase: 'shake' };
+      startRoll: (targetValues: DiceValue[], heldArr: boolean[], power = 0.5) => {
+        // 파워에 따라 흔들기 강도 조절 (0.3~1.0 범위)
+        const p = Math.max(0.3, Math.min(1.0, power));
+        const shakeDuration = 0.7 + p * 0.8;  // 파워 클수록 더 오래 흔들기
+        cupAnim = { t: 0, duration: shakeDuration, spilled: false, phase: 'shake', power: p };
+        // Use seeded PRNG for deterministic physics in online mode (seed != 0)
+        const seed = rollSeedRef.current;
+        rollRng = seed ? mulberry32(seed) : undefined;
         dice.forEach((d, i) => {
           if (heldArr?.[i]) {
             d.targetValue = targetValues[i];
@@ -247,9 +274,8 @@ export function Dice3D({ values, held, onRollComplete, onToggleHold, rollSeed = 
       },
       syncRestingValues: (vals: DiceValue[]) => {
         dice.forEach((d, i) => {
-          if (!d.resting || d.snapping) return;
+          if (!d.resting) return;
           d.targetValue = vals[i];
-          d.mesh.quaternion.copy(makeUprightQuaternion(vals[i], (i - 2) * 0.06));
         });
       },
     };
@@ -269,7 +295,7 @@ export function Dice3D({ values, held, onRollComplete, onToggleHold, rollSeed = 
     if (rollSeed === lastSeedRef.current) return;
     lastSeedRef.current = rollSeed;
     const api = (Dice3D as unknown as { api?: Dice3DAPI }).api;
-    if (api) api.startRoll(values, held);
+    if (api) api.startRoll(values, held, rollPowerRef.current);
   }, [rollSeed, values, held]);
 
   useEffect(() => {
@@ -295,7 +321,7 @@ export function Dice3D({ values, held, onRollComplete, onToggleHold, rollSeed = 
 }
 
 interface Dice3DAPI {
-  startRoll: (targetValues: DiceValue[], heldArr: boolean[]) => void;
+  startRoll: (targetValues: DiceValue[], heldArr: boolean[], power?: number) => void;
   syncRestingValues: (vals: DiceValue[]) => void;
 }
 
