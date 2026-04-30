@@ -115,3 +115,28 @@
   color: var(--text-tertiary);
   padding: 10px 0;
 }
+
+.btnRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.leaveBtn {
+  font-family: var(--font-text);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: var(--bg-secondary, #f2f2f7);
+  border: 1px solid var(--hairline);
+  padding: 10px 20px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.leaveBtn:hover {
+  background: var(--bg-hover, #e5e5ea);
+}
