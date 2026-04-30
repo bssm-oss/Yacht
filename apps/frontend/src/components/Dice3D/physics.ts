@@ -23,6 +23,7 @@ export interface DiceBody {
   resting: boolean;
   inCup: boolean;
   held: boolean;
+  noSpin: boolean;
   targetValue: DiceValue;
   settleT: number;
   /** @deprecated 스냅 보간 제거됨 – 호환성을 위해 유지 */
@@ -53,6 +54,7 @@ export function createDice(): DiceBody[] {
       resting: false,
       inCup: true,
       held: false,
+      noSpin: false,
       targetValue: 1,
       settleT: 0,
       snapping: false,
@@ -126,13 +128,17 @@ export function stepPhysics(
     }
 
     d.vel.multiplyScalar(0.995);
-    d.ang.multiplyScalar(0.992);
 
-    const angle = d.ang.length() * dt;
-    if (angle > 1e-5) {
-      const axis = d.ang.clone().normalize();
-      const dq = new THREE.Quaternion().setFromAxisAngle(axis, angle);
-      d.mesh.quaternion.premultiply(dq);
+    if (d.noSpin) {
+      d.ang.set(0, 0, 0);
+    } else {
+      d.ang.multiplyScalar(0.992);
+      const angle = d.ang.length() * dt;
+      if (angle > 1e-5) {
+        const axis = d.ang.clone().normalize();
+        const dq = new THREE.Quaternion().setFromAxisAngle(axis, angle);
+        d.mesh.quaternion.premultiply(dq);
+      }
     }
 
     d.mesh.position.copy(d.pos);
@@ -151,6 +157,7 @@ export function stepPhysics(
       if (d.settleT > 0.18) {
         d.resting = true;
         d.settleT = 0;
+        d.noSpin = false;
         d.mesh.quaternion.copy(targetQ);
         if (onSettle) {
           const diceIdx = (dice as DiceBody[]).indexOf(d);
@@ -239,12 +246,16 @@ export function resolveCollisions(dice: DiceBody[]) {
               b.settleT = 0;
 
               const spinMag = Math.min(12, Math.abs(velAlongN) * 6);
-              a.ang.x += (Math.random() - 0.5) * spinMag;
-              a.ang.y += (Math.random() - 0.5) * spinMag;
-              a.ang.z += (Math.random() - 0.5) * spinMag;
-              b.ang.x += (Math.random() - 0.5) * spinMag;
-              b.ang.y += (Math.random() - 0.5) * spinMag;
-              b.ang.z += (Math.random() - 0.5) * spinMag;
+              if (!a.noSpin) {
+                a.ang.x += (Math.random() - 0.5) * spinMag;
+                a.ang.y += (Math.random() - 0.5) * spinMag;
+                a.ang.z += (Math.random() - 0.5) * spinMag;
+              }
+              if (!b.noSpin) {
+                b.ang.x += (Math.random() - 0.5) * spinMag;
+                b.ang.y += (Math.random() - 0.5) * spinMag;
+                b.ang.z += (Math.random() - 0.5) * spinMag;
+              }
             }
           }
 

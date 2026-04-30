@@ -172,10 +172,11 @@ export function Dice3D({ values, held, onRollComplete, onPhysicsResult, onToggle
         }
 
         if (wasHeld && !isHeld && !d.inCup) {
-          // Launch back to roll zone with correct face but no spin → value unchanged
+          // Launch back to roll zone preserving face (no spin)
           dieToSlot[i] = -1;
           d.resting = false;
           d.settleT = 0;
+          d.noSpin = true;
           d.mesh.quaternion.copy(makeUprightQuaternion(d.targetValue, 0));
           d.vel.set(
             (Math.random() - 0.5) * 1.5,
@@ -262,6 +263,7 @@ export function Dice3D({ values, held, onRollComplete, onPhysicsResult, onToggle
           d.resting = false;
           d.inCup = true;
           d.held = false;
+          d.noSpin = false;
           d.settleT = 0;
           d.pos.set(CUP.x + (Math.random() - 0.5) * 0.5, CUP.y + (i - 2) * 0.15, CUP.z + (Math.random() - 0.5) * 0.5);
           d.vel.set(0, 0, 0);
