@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useGameStore } from './store/gameStore';
 import { useMultiplayerStore } from './store/multiplayerStore';
+import { useAuthStore } from './store/authStore';
 import { GameHeader } from './components/GameHeader/GameHeader';
 import { Scoreboard } from './components/Scoreboard/Scoreboard';
 import { Dice3D } from './components/Dice3D/Dice3D';
@@ -9,6 +10,7 @@ import { NewGameModal } from './components/NewGameModal/NewGameModal';
 import { TweaksPanel, type Theme, type Mood } from './components/TweaksPanel/TweaksPanel';
 import { WaitingRoom } from './components/WaitingRoom/WaitingRoom';
 import { Chat } from './components/Chat/Chat';
+import { AuthCallback } from './components/Auth/AuthCallback';
 import { CATEGORY_KEYS } from '@shared/types/game';
 import { scoreCategory } from '@shared/scoring';
 
@@ -17,6 +19,11 @@ import styles from './styles/layout.module.css';
 function App() {
   const local = useGameStore();
   const multiplayer = useMultiplayerStore();
+  const { user } = useAuthStore();
+
+  // OAuth 콜백 페이지 처리 (/auth/callback#token=...)
+  const [isAuthCallback] = useState(() => window.location.pathname === '/auth/callback');
+  const [authDone, setAuthDone] = useState(false);
 
   const [showNewGame, setShowNewGame] = useState(false);
   const [newGameInitialTab, setNewGameInitialTab] = useState<'local' | 'online'>('local');
@@ -33,12 +40,22 @@ function App() {
 
   const [diceRolling, setDiceRolling] = useState(false);
 
+  // 파워 게이지 상태
+  const [rollPower, setRollPower] = useState(0);        // 0~1
+  const [isPressing, setIsPressing] = useState(false);  // 버튼 누르는 중
+  const powerTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const powerRef = useRef(0);
+
   const isOnline = multiplayer.connectionState === 'connected';
   const { isSpectator, setReady, startGame, chatMessages, sendChat, pendingRejoinModal, rejoin, spectate, restartRoom, kickPlayer } = multiplayer;
 
   // Use online game state when connected, local otherwise
   const gameState = isOnline ? (multiplayer.gameState ?? local.gameState) : local.gameState;
-  const rollSeed = isOnline ? onlineRollSeed : local.rollSeed;
+  // Online: use actual rollSeed from server (deterministic physics) falling back to counter trigger
+  // Local: use local rollSeed from store
+  const rollSeed = isOnline
+    ? (multiplayer.gameState?.rollSeed ?? onlineRollSeed)
+    : local.rollSeed;
 
   // Track roll start to suppress scoreboard preview during animation
   const prevRollSeedRef = useRef(rollSeed);
@@ -49,15 +66,18 @@ function App() {
     }
   }, [rollSeed]);
 
-  // Track online rolls to trigger dice animation
+  // Track online rolls to trigger dice animation (fallback when rollSeed is not set)
   useEffect(() => {
     if (!isOnline || !multiplayer.gameState) return;
     const current = multiplayer.gameState.rollsUsed;
     if (prevOnlineRollsUsedRef.current !== -1 && current > prevOnlineRollsUsedRef.current) {
-      setOnlineRollSeed((s) => s + 1);
+      // Only increment counter if server didn't provide a rollSeed
+      if (!multiplayer.gameState.rollSeed) {
+        setOnlineRollSeed((s) => s + 1);
+      }
     }
     prevOnlineRollsUsedRef.current = current;
-  }, [multiplayer.gameState?.rollsUsed, isOnline]);
+  }, [multiplayer.gameState?.rollsUsed, multiplayer.gameState?.rollSeed, isOnline]);
 
   useEffect(() => {
     if (!isOnline) prevOnlineRollsUsedRef.current = -1;
@@ -69,6 +89,20 @@ function App() {
       setShowNewGame(false);
     }
   }, [multiplayer.connectionState]);
+
+  // 게임이 재시작(playing)되면 열려있는 로비 모달 자동 닫기
+  useEffect(() => {
+    if (isOnline && gameState.phase === 'playing' && showNewGame) {
+      setShowNewGame(false);
+    }
+  }, [isOnline, gameState.phase, showNewGame]);
+
+  // Google 로그인 후 플레이어 이름 자동 설정 (로컬 게임에서만)
+  useEffect(() => {
+    if (user && !isOnline) {
+      local.renamePlayer(0, user.name);
+    }
+  }, [user?.name, isOnline]);
 
   const activePlayer = gameState.players[gameState.activePlayerIndex];
 
@@ -141,13 +175,53 @@ function App() {
   const handleToggleHold = isOnline ? multiplayer.hold : local.toggleHold;
   const handlePickCategory = isOnline ? multiplayer.pickCategory : local.pickCategory;
 
+  // 로컬 플레이: 물리 엔진 결과를 실제 주사위 값으로 반영
+  const handlePhysicsResult = useCallback((physicsValues: import('@shared/types/game').DiceValue[]) => {
+    if (!isOnline) {
+      local.setDiceFromPhysics(physicsValues);
+    }
+  }, [isOnline, local]);
+
+  // ── 파워 게이지 ──────────────────────────────────────────────
+  const startPressing = useCallback(() => {
+    if (diceRolling || allHeldRef.current) return;
+    setIsPressing(true);
+    powerRef.current = 0;
+    setRollPower(0);
+    if (powerTimerRef.current) clearInterval(powerTimerRef.current);
+    // 모두의 마블처럼 게이지가 올라가며 진동
+    powerTimerRef.current = setInterval(() => {
+      powerRef.current = Math.min(1, powerRef.current + 0.025); // ~40프레임(~1.6초)에 가득 참
+      setRollPower(powerRef.current);
+      if (powerRef.current >= 1) {
+        // 최대 파워 도달 시 진동 효과 위해 잠깐 유지 후 자동 투척
+        if (powerTimerRef.current) clearInterval(powerTimerRef.current);
+      }
+    }, 40);
+  }, [diceRolling]);
+
+  const releasePressing = useCallback(() => {
+    if (!isPressing) return;
+    if (powerTimerRef.current) clearInterval(powerTimerRef.current);
+    setIsPressing(false);
+    const power = powerRef.current;
+    setRollPower(0);
+    powerRef.current = 0;
+    // 파워가 있어야 굴리기 (최소 5% 이상)
+    if (power >= 0.05) {
+      handleRoll();
+    }
+  }, [isPressing, handleRoll]);
+
   const handleLeave = () => {
     multiplayer.disconnect();
   };
 
+  // 게임 종료 후 다시 하기: 온라인이면 로비 모달을 열어 호스트가 재시작 가능하도록
   const handlePlayAgain = () => {
-    if (multiplayer.roomId) {
-      restartRoom();
+    if (isOnline && multiplayer.roomId) {
+      setNewGameInitialTab('online');
+      setShowNewGame(true);
     } else {
       setNewGameInitialTab('local');
       setShowNewGame(true);
@@ -160,6 +234,13 @@ function App() {
   };
 
   const allHeld = gameState.held.length > 0 && gameState.held.every(Boolean);
+  const allHeldRef = useRef(allHeld);
+  useEffect(() => { allHeldRef.current = allHeld; }, [allHeld]);
+
+  // OAuth 콜백 페이지: 토큰 파싱 후 메인으로
+  if (isAuthCallback && !authDone) {
+    return <AuthCallback onDone={() => setAuthDone(true)} />;
+  }
 
   return (
     <div className={styles.app} data-theme={local.theme} data-mood={local.mood}>
@@ -209,26 +290,52 @@ function App() {
               values={gameState.dice}
               held={gameState.held}
               onRollComplete={() => setDiceRolling(false)}
+              onPhysicsResult={handlePhysicsResult}
               onToggleHold={handleToggleHold}
               rollSeed={rollSeed}
+              rollPower={rollPower > 0 ? rollPower : undefined}
             />
 
-            <button
-              className={styles.rollBtn}
-              onClick={handleRoll}
-              disabled={allHeld}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              굴리기
-            </button>
+            {/* 파워 게이지 굴리기 버튼 */}
+            <div className={styles.rollArea}>
+              {isPressing && (
+                <div className={styles.powerGauge}>
+                  <div
+                    className={styles.powerFill}
+                    style={{
+                      width: `${rollPower * 100}%`,
+                      background: rollPower < 0.4
+                        ? '#34c759'
+                        : rollPower < 0.75
+                          ? '#ff9500'
+                          : '#ff3b30',
+                    }}
+                  />
+                  <span className={styles.powerLabel}>
+                    {rollPower < 0.4 ? '약' : rollPower < 0.75 ? '보통' : '강'}
+                  </span>
+                </div>
+              )}
+              <button
+                className={`${styles.rollBtn} ${isPressing ? styles.rollBtnPressing : ''}`}
+                onPointerDown={startPressing}
+                onPointerUp={releasePressing}
+                onPointerLeave={releasePressing}
+                disabled={allHeld || diceRolling}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                {isPressing ? '놓아서 굴리기' : '꾹 눌러서 굴리기'}
+              </button>
+            </div>
 
             {gameState.phase === 'ended' && (
               <GameOver
                 players={gameState.players}
                 winnerId={gameState.winnerId ?? ''}
                 onPlayAgain={handlePlayAgain}
+                onLeave={isOnline ? handleLeave : undefined}
                 isOnline={isOnline}
                 isHost={!multiplayer.roomId || gameState.hostId === multiplayer.playerId}
               />

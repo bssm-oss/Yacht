@@ -1,4 +1,5 @@
 import styles from './GameHeader.module.css';
+import { UserMenu } from '../Auth/UserMenu';
 
 interface GameHeaderProps {
   playerName: string;
@@ -19,6 +20,7 @@ export function GameHeader({
   onNewGame,
   onLeave,
 }: GameHeaderProps) {
+
   return (
     <header className={styles.header}>
       <div className={styles.left}>
@@ -62,9 +64,12 @@ export function GameHeader({
             새 게임
           </button>
         )}
+        {/* OAuth 유저 메뉴 */}
+        <UserMenu />
       </div>
     </header>
   );
 }
+
 
 export default GameHeader;
