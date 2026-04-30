@@ -17,7 +17,8 @@
   },
   "dependencies": {
     "vite": "^6.2.0",
-    "@vitejs/plugin-react": "^4.3.4"
+    "@vitejs/plugin-react": "^4.3.4",
+    "@prisma/client": "^7.8.0"
   },
   "devDependencies": {
     "turbo": "^2.4.4",
