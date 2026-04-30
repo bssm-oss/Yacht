@@ -15,10 +15,16 @@
     "typecheck": "turbo run typecheck",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\""
   },
-  "dependencies": {
-    "vite": "^6.2.0",
-    "@vitejs/plugin-react": "^4.3.4",
-    "@prisma/client": "^7.8.0"
+"dependencies": {
+  "vite": "^6.2.0",
+  "@vitejs/plugin-react": "^4.3.4",
+  "@prisma/client": "^7.8.0",
+  "@prisma/adapter-pg": "^7.8.0",
+  "@nestjs/jwt": "^11.0.2",
+  "@nestjs/passport": "^11.0.5",
+  "passport-google-oauth20": "^2.0.0",
+  "passport-jwt": "^4.0.1",
+  "express": "^4.21.0"
   },
   "devDependencies": {
     "turbo": "^2.4.4",
