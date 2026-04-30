@@ -2,7 +2,6 @@
   "name": "dice",
   "version": "1.0.0",
   "private": true,
-  "packageManager": "pnpm@10.33.2",
   "description": "BSSM Dice - Yacht dice game with Three.js and Electron",
   "pnpm": {
     "onlyBuiltDependencies": ["prisma", "@prisma/engines", "@prisma/client", "@nestjs/core", "esbuild"]
