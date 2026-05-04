@@ -1,202 +1,618 @@
-.lobbyMain {
-  flex: 1;
+/* ── 3-column lobby layout ──────────────────────────────── */
+.layout {
+  display: grid;
+  grid-template-columns: 200px 1fr 220px;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+/* ── Left nav sidebar ───────────────────────────────────── */
+.navSidebar {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: 48px 24px 80px;
-  gap: 48px;
-  overflow-y: auto;
-}
-
-/* ── Hero Section ───────────────────────────────── */
-.heroSection {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  text-align: center;
-  max-width: 480px;
-  width: 100%;
-}
-
-.heroTitle {
-  font-family: var(--font-display, var(--font-text));
-  font-size: clamp(28px, 5vw, 44px);
-  font-weight: 800;
-  color: var(--text-primary, #111);
-  margin: 0;
-  letter-spacing: -0.02em;
-}
-
-.heroSubtitle {
-  font-family: var(--font-text);
-  font-size: 15px;
-  color: var(--text-secondary, #888);
-  margin: 0 0 12px;
-}
-
-.actionButtons {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  justify-content: center;
-  margin-top: 8px;
-}
-
-.btnPrimary {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-family: var(--font-text);
-  font-size: 15px;
-  font-weight: 600;
-  color: #fff;
-  background: var(--color-apple-blue, #007aff);
-  border: none;
-  padding: 12px 24px;
-  border-radius: var(--radius-pill, 999px);
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.35);
-  transition: box-shadow 0.15s ease, opacity 0.15s ease;
-}
-
-.btnPrimary:hover {
-  opacity: 0.9;
-  box-shadow: 0 6px 18px rgba(0, 122, 255, 0.45);
-}
-
-.btnSecondary {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-family: var(--font-text);
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--text-primary, #111);
-  background: var(--bg-card, #fff);
-  border: 1px solid var(--hairline, #e5e5e5);
-  padding: 12px 24px;
-  border-radius: var(--radius-pill, 999px);
-  cursor: pointer;
-  transition: background 0.15s ease, box-shadow 0.15s ease;
-}
-
-.btnSecondary:hover {
-  background: var(--bg-secondary, #f5f5f5);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-
-/* ── Board Preview Section ───────────────────────── */
-.boardPreview {
-  width: 100%;
-  max-width: 680px;
-  background: var(--bg-card, #fff);
-  border: 1px solid var(--hairline, #e5e5e5);
-  border-radius: 16px;
+  border-right: 1px solid var(--hairline);
+  background: var(--bg-card);
+  padding: 0;
   overflow: hidden;
 }
 
-.boardHeader {
+.logo {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--hairline, #e5e5e5);
-}
-
-.boardTitle {
-  font-family: var(--font-text);
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--text-primary, #111);
-  margin: 0;
-}
-
-.boardMore {
-  font-family: var(--font-text);
-  font-size: 13px;
-  color: var(--color-apple-blue, #007aff);
-  text-decoration: none;
-}
-
-.boardMore:hover {
-  text-decoration: underline;
-}
-
-.boardList {
-  min-height: 120px;
-  display: flex;
-  flex-direction: column;
-}
-
-.boardEmpty {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
   gap: 10px;
-  padding: 40px 20px;
-  color: var(--text-secondary, #888);
+  padding: 20px 18px 16px;
+  color: var(--color-apple-blue, #007aff);
+  border-bottom: 1px solid var(--hairline);
 }
 
-.boardEmpty p {
-  font-family: var(--font-text);
-  font-size: 14px;
-  margin: 0;
+.logoText {
+  font-family: var(--font-display, var(--font-text));
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
 }
 
-/* Board post row (used when posts exist) */
-.boardRow {
+.navItems {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 10px;
+  flex: 1;
+}
+
+.navBtn {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 20px;
-  border-bottom: 1px solid var(--hairline, #e5e5e5);
-  text-decoration: none;
-  color: var(--text-primary, #111);
-  transition: background 0.1s ease;
-}
-
-.boardRow:last-child {
-  border-bottom: none;
-}
-
-.boardRow:hover {
-  background: var(--bg-secondary, #f5f5f5);
-}
-
-.boardRowTitle {
-  flex: 1;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
   font-family: var(--font-text);
   font-size: 14px;
   font-weight: 500;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+  text-align: left;
+  width: 100%;
+}
+
+.navBtn:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.navBtnActive {
+  background: color-mix(in srgb, var(--color-apple-blue, #007aff) 12%, transparent);
+  color: var(--color-apple-blue, #007aff);
+  font-weight: 600;
+}
+
+.navBtnActive:hover {
+  background: color-mix(in srgb, var(--color-apple-blue, #007aff) 18%, transparent);
+}
+
+.navFooter {
+  border-top: 1px solid var(--hairline);
+  padding: 12px 10px;
+}
+
+.userCard {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--bg-secondary);
+}
+
+.userAvatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.userMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.userName {
+  font-family: var(--font-text);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.boardRowMeta {
+.logoutBtn {
+  background: none;
+  border: none;
   font-family: var(--font-text);
-  font-size: 12px;
-  color: var(--text-secondary, #888);
+  font-size: 11px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+}
+
+.logoutBtn:hover {
+  color: var(--color-apple-red, #ff3b30);
+}
+
+.loginBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--color-apple-blue, #007aff);
+  color: #fff;
+  font-family: var(--font-text);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: opacity 0.12s ease;
+}
+
+.loginBtn:hover {
+  opacity: 0.88;
+}
+
+/* ── Center content ─────────────────────────────────────── */
+.content {
+  overflow-y: auto;
+  background: var(--bg-primary);
+}
+
+.panel {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 32px 28px 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.panelTitle {
+  font-family: var(--font-display, var(--font-text));
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.refreshBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--hairline);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.refreshBtn:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+/* ── Guest name row ─────────────────────────────────────── */
+.guestNameRow {
+  display: flex;
+  gap: 10px;
+}
+
+/* ── Room list ──────────────────────────────────────────── */
+.roomList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.roomCard {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  background: var(--bg-card);
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+
+.roomCard:hover {
+  border-color: color-mix(in srgb, var(--color-apple-blue, #007aff) 35%, transparent);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+.roomCardLeft {
+  flex: 1;
+  min-width: 0;
+}
+
+.roomCardHost {
+  font-family: var(--font-text);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-@media (max-width: 600px) {
-  .lobbyMain {
-    padding: 32px 16px 80px;
-    gap: 32px;
-  }
+.roomCardCode {
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
 
-  .actionButtons {
-    flex-direction: column;
-    width: 100%;
-  }
+.roomCardMid {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
 
-  .btnPrimary,
-  .btnSecondary {
+.roomStatus {
+  font-family: var(--font-text);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 99px;
+}
+
+.roomStatusWaiting {
+  background: color-mix(in srgb, #34c759 15%, transparent);
+  color: #34c759;
+}
+
+.roomStatusPlaying {
+  background: color-mix(in srgb, #ff9500 15%, transparent);
+  color: #ff9500;
+}
+
+.roomPlayers {
+  font-family: var(--font-text);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.joinBtn {
+  padding: 8px 18px;
+  border-radius: 8px;
+  border: none;
+  background: var(--color-apple-blue, #007aff);
+  color: #fff;
+  font-family: var(--font-text);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.12s ease;
+}
+
+.joinBtn:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.joinBtn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.joinBtnSpectate {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--hairline);
+}
+
+/* ── Empty / error states ───────────────────────────────── */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 60px 20px;
+  color: var(--text-secondary);
+}
+
+.emptyState p {
+  font-family: var(--font-text);
+  font-size: 14px;
+  margin: 0;
+  text-align: center;
+}
+
+.errorBanner {
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: color-mix(in srgb, #ff3b30 12%, transparent);
+  color: #ff3b30;
+  font-family: var(--font-text);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* ── Create panel ───────────────────────────────────────── */
+.modeTabs {
+  display: flex;
+  gap: 4px;
+  background: var(--bg-secondary);
+  border-radius: 10px;
+  padding: 4px;
+}
+
+.modeTab {
+  flex: 1;
+  padding: 8px 0;
+  border-radius: 7px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-text);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.modeTabActive {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.createForm {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  background: var(--bg-card);
+  border: 1px solid var(--hairline);
+  border-radius: 14px;
+  padding: 22px;
+}
+
+.formField {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fieldLabel {
+  font-family: var(--font-text);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.nameInput {
+  padding: 10px 14px;
+  border-radius: 9px;
+  border: 1px solid var(--hairline);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-family: var(--font-text);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.12s ease;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.nameInput:focus {
+  border-color: var(--color-apple-blue, #007aff);
+}
+
+.codeInput {
+  font-family: var(--font-mono, monospace);
+  font-size: 20px;
+  font-weight: 700;
+  text-align: center;
+  letter-spacing: 0.15em;
+  max-width: 160px;
+}
+
+.optionRow {
+  display: flex;
+  gap: 8px;
+}
+
+.optionBtn {
+  padding: 8px 18px;
+  border-radius: 8px;
+  border: 1px solid var(--hairline);
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  font-family: var(--font-text);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.optionBtn:hover {
+  background: var(--bg-card);
+  color: var(--text-primary);
+}
+
+.optionBtnActive {
+  background: color-mix(in srgb, var(--color-apple-blue, #007aff) 12%, transparent);
+  border-color: var(--color-apple-blue, #007aff);
+  color: var(--color-apple-blue, #007aff);
+  font-weight: 600;
+}
+
+.primaryBtn {
+  padding: 12px 0;
+  border-radius: 10px;
+  border: none;
+  background: var(--color-apple-blue, #007aff);
+  color: #fff;
+  font-family: var(--font-text);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.12s ease;
+  width: 100%;
+}
+
+.primaryBtn:hover:not(:disabled) {
+  opacity: 0.88;
+}
+
+.primaryBtn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* ── Right friends sidebar ──────────────────────────────── */
+.friendsSidebar {
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid var(--hairline);
+  background: var(--bg-card);
+  overflow: hidden;
+}
+
+.friendsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 16px 14px;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.friendsTitle {
+  font-family: var(--font-text);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.friendsBadge {
+  font-family: var(--font-text);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--bg-secondary);
+  padding: 2px 7px;
+  border-radius: 99px;
+}
+
+.friendsBody {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.friendsEmpty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 48px 20px;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.friendsEmpty p {
+  font-family: var(--font-text);
+  font-size: 13px;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.friendsLoginBtn {
+  padding: 8px 20px;
+  border-radius: 8px;
+  background: var(--color-apple-blue, #007aff);
+  color: #fff;
+  font-family: var(--font-text);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: opacity 0.12s ease;
+}
+
+.friendsLoginBtn:hover {
+  opacity: 0.85;
+}
+
+/* ── Responsive ─────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: 56px 1fr;
+  }
+  .friendsSidebar {
+    display: none;
+  }
+  .logoText {
+    display: none;
+  }
+  .navBtn {
     justify-content: center;
-    width: 100%;
+    padding: 12px;
+  }
+  .navBtn span,
+  .navItems .navBtn {
+    font-size: 0;
+  }
+  .navFooter {
+    padding: 8px 6px;
+  }
+  .userCard {
+    justify-content: center;
+    padding: 8px 6px;
+  }
+  .userMeta {
+    display: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr auto;
+  }
+  .navSidebar {
+    order: 2;
+    flex-direction: row;
+    border-right: none;
+    border-top: 1px solid var(--hairline);
+    padding: 0;
+  }
+  .logo {
+    display: none;
+  }
+  .navItems {
+    flex-direction: row;
+    justify-content: space-around;
+    padding: 6px;
+    flex: 1;
+  }
+  .navBtn {
+    flex-direction: column;
+    gap: 3px;
+    font-size: 10px;
+    padding: 6px 8px;
+  }
+  .navFooter {
+    display: flex;
+    align-items: center;
+    padding: 6px;
+  }
+  .userMeta {
+    display: none;
+  }
+  .panel {
+    padding: 20px 16px 40px;
   }
 }
