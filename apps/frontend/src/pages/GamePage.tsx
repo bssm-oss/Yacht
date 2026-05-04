@@ -54,21 +54,19 @@ export function GamePage() {
     ? (multiplayer.gameState?.rollSeed ?? onlineRollSeed)
     : local.rollSeed;
 
-  // Auto-reconnect: if URL has a roomId and we're not in that room, open the join modal
-  const hasAttemptedJoin = useRef(false);
+  // Direct join modal: shown when entering via /room/:roomId URL
+  const [showDirectJoin, setShowDirectJoin] = useState(() =>
+    !!urlRoomId && multiplayer.connectionState === 'disconnected'
+  );
+  const [directJoinName, setDirectJoinName] = useState(user?.name ?? '');
+
   useEffect(() => {
-    if (
-      urlRoomId &&
-      !hasAttemptedJoin.current &&
-      multiplayer.connectionState === 'disconnected' &&
-      multiplayer.roomId === null
-    ) {
-      hasAttemptedJoin.current = true;
-      // Pre-fill the room code and show the online modal
-      setNewGameInitialTab('online');
-      setShowNewGame(true);
-    }
-  }, [urlRoomId, multiplayer.connectionState, multiplayer.roomId]);
+    if (user?.name && !directJoinName) setDirectJoinName(user.name);
+  }, [user?.name]);
+
+  useEffect(() => {
+    if (isOnline) setShowDirectJoin(false);
+  }, [isOnline]);
 
   // When we connect to a room, navigate to the correct URL
   useEffect(() => {
@@ -80,19 +78,17 @@ export function GamePage() {
     }
   }, [isOnline, multiplayer.roomId, navigate]);
 
-  // When disconnected from a room (user left), navigate back to lobby
+  // Navigate back to lobby only after having been connected (not on initial URL load)
+  const wasConnectedRef = useRef(false);
   useEffect(() => {
-    if (
-      !isOnline &&
-      multiplayer.connectionState === 'disconnected' &&
-      multiplayer.roomId === null &&
-      urlRoomId &&
-      hasAttemptedJoin.current &&
-      !showNewGame
-    ) {
+    if (isOnline) wasConnectedRef.current = true;
+  }, [isOnline]);
+
+  useEffect(() => {
+    if (!isOnline && multiplayer.connectionState === 'disconnected' && wasConnectedRef.current) {
       navigate('/', { replace: true });
     }
-  }, [isOnline, multiplayer.connectionState, multiplayer.roomId, urlRoomId, showNewGame, navigate]);
+  }, [isOnline, multiplayer.connectionState, navigate]);
 
   // Track roll start to suppress scoreboard preview during animation
   const prevRollSeedRef = useRef(rollSeed);
@@ -397,6 +393,87 @@ export function GamePage() {
           onShowHintsChange={local.setShowHints}
         />
       </div>
+
+      {showDirectJoin && urlRoomId && !isOnline && (
+        <div style={{
+          position: 'fixed', inset: 0,
+          background: 'rgba(0,0,0,0.55)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 3000,
+        }}>
+          <div style={{
+            background: 'var(--bg-card)',
+            border: '1px solid var(--hairline)',
+            borderRadius: '16px',
+            padding: '28px 32px',
+            display: 'flex', flexDirection: 'column', gap: '16px',
+            minWidth: '280px',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+          }}>
+            <div style={{ fontFamily: 'var(--font-text)', fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)' }}>
+              방 참여
+            </div>
+            <div style={{ fontFamily: 'var(--font-text)', fontSize: '13px', color: 'var(--text-secondary)' }}>
+              방 코드: <strong>{urlRoomId}</strong>
+            </div>
+            {!user && (
+              <input
+                style={{
+                  padding: '10px 12px',
+                  borderRadius: '8px',
+                  border: '1px solid var(--hairline)',
+                  background: 'var(--bg-secondary)',
+                  color: 'var(--text-primary)',
+                  fontFamily: 'var(--font-text)',
+                  fontSize: '14px',
+                  outline: 'none',
+                }}
+                placeholder="닉네임 입력"
+                value={directJoinName}
+                onChange={(e) => setDirectJoinName(e.target.value)}
+                maxLength={20}
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && directJoinName.trim()) {
+                    multiplayer.joinRoom(urlRoomId, directJoinName.trim());
+                  }
+                }}
+              />
+            )}
+            {multiplayer.error && (
+              <div style={{ color: '#ff3b30', fontFamily: 'var(--font-text)', fontSize: '13px' }}>
+                {multiplayer.error}
+              </div>
+            )}
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button
+                onClick={() => navigate('/', { replace: true })}
+                style={{
+                  flex: 1, padding: '10px 0',
+                  background: 'var(--bg-secondary)', color: 'var(--text-primary)',
+                  border: '1px solid var(--hairline)', borderRadius: '10px', cursor: 'pointer',
+                  fontFamily: 'var(--font-text)', fontSize: '14px', fontWeight: 600,
+                }}
+              >
+                취소
+              </button>
+              <button
+                disabled={!directJoinName.trim() || multiplayer.connectionState === 'connecting'}
+                onClick={() => multiplayer.joinRoom(urlRoomId, directJoinName.trim())}
+                style={{
+                  flex: 2, padding: '10px 0',
+                  background: 'var(--color-apple-blue)', color: '#fff',
+                  border: 'none', borderRadius: '10px', cursor: 'pointer',
+                  fontFamily: 'var(--font-text)', fontSize: '14px', fontWeight: 600,
+                  opacity: !directJoinName.trim() ? 0.5 : 1,
+                }}
+              >
+                {multiplayer.connectionState === 'connecting' ? '연결 중…' : '참여하기'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showNewGame && (
         <NewGameModal
