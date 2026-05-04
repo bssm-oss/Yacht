@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import type { DiceValue } from '@shared/types/game';
 import { TRAY, HOLD_SLOTS } from './tray';
 import { CUP } from './cup';
-import { readFaceUp, makeUprightQuaternion, createDieMesh } from './dieMesh';
+import { makeUprightQuaternion, createDieMesh } from './dieMesh';
 
 export const HALF = 0.24;
 export const FLOOR_Y = TRAY.floorY + HALF;
@@ -147,8 +147,8 @@ export function stepPhysics(
     if (onFloor && d.vel.length() < 0.4 && d.ang.length() < 0.7) {
       d.settleT += dt;
 
-      // Gradually align to nearest flat face so die never rests on an edge
-      const faceValue = readFaceUp(d.mesh);
+      // Align to targetValue so the visual always matches game state
+      const faceValue = d.targetValue;
       const targetQ = makeUprightQuaternion(faceValue, 0);
       const progress = Math.min(1, d.settleT / 0.18);
       d.mesh.quaternion.slerp(targetQ, progress * 0.25);
