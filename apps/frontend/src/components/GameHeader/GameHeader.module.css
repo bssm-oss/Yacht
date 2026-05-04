@@ -142,3 +142,16 @@
 .copyLinkBtn:hover {
   background: rgba(0, 122, 255, 0.16);
 }
+
+.spectatorBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-text);
+  font-size: 12px;
+  font-weight: 600;
+  color: #ff9500;
+  background: rgba(255, 149, 0, 0.12);
+  padding: 3px 8px;
+  border-radius: 8px;
+}

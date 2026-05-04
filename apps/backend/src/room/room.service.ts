@@ -22,6 +22,7 @@ function makePlayer(id: string, name: string): Player {
 export class RoomService {
   private rooms = new Map<string, GameState>();
   private spectators = new Map<string, Set<string>>();
+  private spectatorNames = new Map<string, string>();
   private pendingRemovals = new Map<string, { timer: ReturnType<typeof setTimeout>; roomId: string }>();
 
   createRoom(playerName: string, socketId: string, maxPlayers: number = 4, isPublic: boolean = true): GameState {
@@ -56,6 +57,7 @@ export class RoomService {
       const spectatorSet = this.spectators.get(roomId) ?? new Set<string>();
       spectatorSet.add(socketId);
       this.spectators.set(roomId, spectatorSet);
+      this.spectatorNames.set(socketId, playerName);
       return { spectating: true, state };
     }
 
@@ -95,6 +97,11 @@ export class RoomService {
     for (const [, spectatorSet] of this.spectators) {
       spectatorSet.delete(socketId);
     }
+    this.spectatorNames.delete(socketId);
+  }
+
+  getSpectatorName(socketId: string): string | undefined {
+    return this.spectatorNames.get(socketId);
   }
 
   disconnectPlayer(

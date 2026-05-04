@@ -281,6 +281,7 @@ export function GamePage() {
         onNewGame={() => setShowNewGame(true)}
         onLeave={handleLeave}
         onCopyRoomLink={isOnline ? handleCopyRoomLink : undefined}
+        isSpectator={isSpectator}
       />
 
       <main className={styles.main}>
@@ -505,39 +506,6 @@ export function GamePage() {
           onLeave={handleLeave}
           onKick={kickPlayer}
         />
-      )}
-
-      {isOnline && isSpectator && gameState.phase !== 'waiting' && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          background: 'rgba(0,0,0,0.75)',
-          color: '#fff',
-          padding: '0.5rem 1rem',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          zIndex: 500,
-          fontSize: '0.9rem',
-        }}>
-          <span>👁 관전 중 — {multiplayer.roomId}</span>
-          <button
-            onClick={handleLeave}
-            style={{
-              background: 'rgba(255,255,255,0.15)',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '6px',
-              padding: '0.3rem 0.8rem',
-              cursor: 'pointer',
-              fontWeight: 600,
-            }}
-          >
-            나가기
-          </button>
-        </div>
       )}
 
       {pendingRejoinModal && (

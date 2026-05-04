@@ -4,7 +4,7 @@ import type { DiceValue } from '@shared/types/game';
 import { createTray, createGroundShadow, HOLD_SLOTS } from './tray';
 import { createCup, CUP } from './cup';
 import { createDice, layoutInTray, stepPhysics, resolveCollisions, HALF, DiceBody } from './physics';
-import { makeUprightQuaternion } from './dieMesh';
+import { makeUprightQuaternion, readFaceUp } from './dieMesh';
 import { updateCupShake, CupAnimation } from './cupAnimation';
 import { mulberry32 } from '../../utils/prng';
 
@@ -157,7 +157,9 @@ export function Dice3D({ values, held, onRollComplete, onPhysicsResult, onToggle
         d.held = isHeld;
 
         if (!wasHeld && isHeld && !d.inCup) {
-          // Just became held: assign next free slot in order
+          // Just became held: capture actual physics face so hold slot shows what physics landed on
+          d.targetValue = readFaceUp(d.mesh);
+          // Assign next free slot in order
           const usedSlots = new Set(dieToSlot.filter((s) => s >= 0));
           for (let s = 0; s < 5; s++) {
             if (!usedSlots.has(s)) {
@@ -273,7 +275,7 @@ export function Dice3D({ values, held, onRollComplete, onPhysicsResult, onToggle
       },
       syncRestingValues: (vals: DiceValue[]) => {
         dice.forEach((d, i) => {
-          if (!d.resting) return;
+          if (!d.resting || d.held) return;
           d.targetValue = vals[i];
         });
       },

@@ -11,6 +11,7 @@ interface GameHeaderProps {
   onLeave?: () => void;
   /** Copy the room share URL to the clipboard */
   onCopyRoomLink?: () => void;
+  isSpectator?: boolean;
 }
 
 export function GameHeader({
@@ -22,6 +23,7 @@ export function GameHeader({
   onNewGame,
   onLeave,
   onCopyRoomLink,
+  isSpectator = false,
 }: GameHeaderProps) {
 
   return (
@@ -51,6 +53,15 @@ export function GameHeader({
                 </svg>
                 링크 복사
               </button>
+            )}
+            {isSpectator && (
+              <span className={styles.spectatorBadge} title="관전 중">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+                관전
+              </span>
             )}
           </>
         )}

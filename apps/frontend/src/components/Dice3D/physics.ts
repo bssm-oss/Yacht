@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import type { DiceValue } from '@shared/types/game';
 import { TRAY, HOLD_SLOTS } from './tray';
 import { CUP } from './cup';
-import { makeUprightQuaternion, createDieMesh } from './dieMesh';
+import { readFaceUp, makeUprightQuaternion, createDieMesh } from './dieMesh';
 
 export const HALF = 0.24;
 export const FLOOR_Y = TRAY.floorY + HALF;
@@ -147,21 +147,20 @@ export function stepPhysics(
     if (onFloor && d.vel.length() < 0.4 && d.ang.length() < 0.7) {
       d.settleT += dt;
 
-      // Align to targetValue so the visual always matches game state
-      const faceValue = d.targetValue;
-      const targetQ = makeUprightQuaternion(faceValue, 0);
+      // Gradually align to nearest flat face (natural physics)
+      const physFace = readFaceUp(d.mesh);
       const progress = Math.min(1, d.settleT / 0.18);
-      d.mesh.quaternion.slerp(targetQ, progress * 0.25);
+      d.mesh.quaternion.slerp(makeUprightQuaternion(physFace, 0), progress * 0.25);
       d.ang.multiplyScalar(0.85);
 
       if (d.settleT > 0.18) {
         d.resting = true;
         d.settleT = 0;
         d.noSpin = false;
-        d.mesh.quaternion.copy(targetQ);
+        d.mesh.quaternion.copy(makeUprightQuaternion(physFace, 0));
         if (onSettle) {
           const diceIdx = (dice as DiceBody[]).indexOf(d);
-          onSettle(diceIdx, faceValue);
+          onSettle(diceIdx, physFace);
         }
       }
     } else {

@@ -133,7 +133,13 @@ export class RoomGateway {
     const state = this.roomService.getRoom(data.roomId);
     if (!state) return;
     const player = state.players.find((p) => p.id === client.id);
-    const playerName = player?.name ?? '관전자';
+    let playerName: string;
+    if (player) {
+      playerName = player.name;
+    } else {
+      const specName = this.roomService.getSpectatorName(client.id);
+      playerName = specName ? `[관전자]${specName}` : '관전자';
+    }
     this.server.to(data.roomId).emit('chat:message', {
       playerId: client.id,
       playerName,
